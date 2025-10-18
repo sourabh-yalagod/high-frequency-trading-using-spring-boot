@@ -10,18 +10,25 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class EmailService {
+
     @Autowired
     private JavaMailSender javaMailSender;
 
-    public void sendEmailForAccountVerification(String to, String otp) throws MessagingException {
-        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
-        mimeMessage.setText("Your OTP is : " + otp);
-        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, "utf-8");
-        mimeMessage.setSubject("Account Verification Mail.");
+    public void sendEmailForAccountVerification(String to, String otp) {
         try {
-            mimeMessageHelper.setTo(to);
-        } catch (RuntimeException e) {
-            throw new RuntimeException("verification Mail failed to send. please try later");
+            MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+
+            String subject = "Account Verification Mail";
+            String body = "Your OTP for account verification is: " + otp;
+
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(body, false); // false = plain text, true = HTML
+
+            javaMailSender.send(mimeMessage);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send verification email. Please try again.", e);
         }
     }
 }

@@ -6,6 +6,8 @@ import cryptoHub.dto.VerifyAccountResponseDto;
 import cryptoHub.entity.TwoFactorAuthEntity;
 import cryptoHub.entity.UserEntity;
 import cryptoHub.repository.TwoFactorAuthRepository;
+import cryptoHub.repository.UserRepository;
+import cryptoHub.service.EmailService;
 import cryptoHub.service.UserService;
 import cryptoHub.util.AppUtils;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,8 @@ import java.util.Optional;
 public class UserController {
     private final UserService userService;
     private final TwoFactorAuthRepository twoFactorAuthRepository;
+    private final EmailService emailService;
+    private final UserRepository userRepository;
 
     @GetMapping("/test")
     public ResponseEntity<String> getResponse() {
@@ -28,10 +32,14 @@ public class UserController {
 
     @GetMapping("/request-verification-otp/{userId}")
     public ResponseEntity<AccountVerificationResponseDto> requestOtpForAccountVerification(@PathVariable String userId) throws Exception {
-        Optional<TwoFactorAuthEntity> twoFactorAuthEntity = Optional.ofNullable(twoFactorAuthRepository.findTwoFactorEntityByUserId(userId).orElseThrow(() -> new Exception("OTP sending for account verification failed....!")));
+        Optional<UserEntity> user = Optional.ofNullable(userRepository.findById(userId).orElseThrow(() ->
+                new Exception("user not exist")
+        ));
         String otp = AppUtils.generateOTP();
-        twoFactorAuthEntity.get().setOtp(otp);
-        twoFactorAuthRepository.save(twoFactorAuthEntity.get());
+        user.get().getTwoFactorAuthEntity().setOtp(otp);
+        user.get().getTwoFactorAuthEntity().setOtp(otp);
+        emailService.sendEmailForAccountVerification("sourabhofficial99804@gmail.com", otp);
+        userRepository.save(user.get());
         return ResponseEntity.status(202).body(new AccountVerificationResponseDto("OTP Sent successfully."));
     }
 
