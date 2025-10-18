@@ -17,6 +17,7 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
+@Builder
 public class UserEntity implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -35,8 +36,8 @@ public class UserEntity implements UserDetails {
     @Enumerated(EnumType.STRING)
     private RolesEnum role = RolesEnum.USER;
 
-    @Embedded
-    @Column(name = "two_factor_authentication")
+    @JoinColumn(name = "two_factor_authentication")
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private TwoFactorAuthEntity twoFactorAuthEntity = new TwoFactorAuthEntity();
 
     @Override

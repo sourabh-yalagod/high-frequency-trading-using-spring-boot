@@ -7,6 +7,7 @@ import cryptoHub.repository.UserRepository;
 import cryptoHub.service.AuthUserService;
 import cryptoHub.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,8 +34,7 @@ public class AuthController {
         if (isUserExist != null) {
             throw new Exception(identifier + " Already used for Account Creation please try something different");
         }
-        userPayload.setPassword(passwordEncoder.encode(userPayload.getPassword()));
-        UserEntity user = userRepository.save(userPayload);
+        UserEntity user = authUserService.registerUser(userPayload);
         return ResponseEntity.ok(user);
     }
 

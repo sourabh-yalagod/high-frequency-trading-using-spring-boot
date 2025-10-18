@@ -7,6 +7,7 @@ public class AppConstants {
     public final static String PUBLIC_AUTH_ROUTES = "/api/auth";
     public static final List<String> PUBLIC_ROUTES = List.of(
             "/api/auth",
-            "/api/public"
+            "/api/public",
+            "/login"
     );
 }

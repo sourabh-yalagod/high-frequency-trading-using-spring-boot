@@ -15,7 +15,7 @@ public class AuthUserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthUserService(UserRepository userRepository,@Lazy PasswordEncoder passwordEncoder) {
+    public AuthUserService(UserRepository userRepository, @Lazy PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -34,5 +34,13 @@ public class AuthUserService implements UserDetailsService {
             throw new Exception("Invalid Password....!");
         }
         return true;
+    }
+
+    public UserEntity registerUser(UserEntity userPayload) throws Exception {
+        System.out.println("INSIDE REGI : " + userPayload);
+        if (userPayload.getPassword() != null) {
+            userPayload.setPassword(passwordEncoder.encode(userPayload.getPassword()));
+        }
+        return userRepository.save(userPayload);
     }
 }

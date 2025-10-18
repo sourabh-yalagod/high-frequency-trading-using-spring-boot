@@ -1,5 +1,7 @@
 package cryptoHub.config;
 
+import cryptoHub.config.OAuthConfig.CustomOAuth2UserService;
+import cryptoHub.config.OAuthConfig.OAuth2SuccessHandler;
 import cryptoHub.filter.JwtAuthFilter;
 import cryptoHub.service.AuthUserService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,9 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final CorsConfigurationSource corsConfigurationSource;
     private final AuthUserService authUserService;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final CustomOAuth2UserService customOAuth2UserService;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
@@ -36,7 +41,14 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .cors(corsConfig -> corsConfig.configurationSource(corsConfigurationSource))
-                .authenticationProvider(authenticationProvider());
+                .authenticationProvider(authenticationProvider())
+                .oauth2Login(oauth2 -> {
+                    oauth2.userInfoEndpoint(userInfo -> {
+                        userInfo.userService(customOAuth2UserService);
+                    });
+                    oauth2.successHandler(oAuth2SuccessHandler);
+                });
+
         return httpSecurity.build();
     }
 
@@ -52,6 +64,7 @@ public class SecurityConfig {
         provider.setPasswordEncoder(passwordEncoder());
         return provider;
     }
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();

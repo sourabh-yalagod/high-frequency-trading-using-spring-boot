@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class ErrorHandlerForFilters {
     public void writeErrorResponse(HttpServletResponse response, HttpStatus status, String message) throws IOException {
         if (response.isCommitted()) {
-            return; // response already sent — don't write again
+            return;
         }
 
         response.resetBuffer(); // clear any previous content
