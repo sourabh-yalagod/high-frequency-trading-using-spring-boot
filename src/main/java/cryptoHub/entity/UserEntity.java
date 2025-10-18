@@ -37,7 +37,7 @@ public class UserEntity implements UserDetails {
 
     @Embedded
     @Column(name = "two_factor_authentication")
-    private TwoFactorAuth twoFactorAuth = new TwoFactorAuth();
+    private TwoFactorAuthEntity twoFactorAuthEntity = new TwoFactorAuthEntity();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

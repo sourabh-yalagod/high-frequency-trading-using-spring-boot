@@ -13,7 +13,7 @@ import lombok.*;
 @Getter
 @Setter
 @ToString
-public class TwoFactorAuth {
+public class TwoFactorAuthEntity {
 
     @Column(name = "is_verified")
     private boolean isVerified = false;

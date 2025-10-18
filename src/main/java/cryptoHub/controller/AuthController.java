@@ -8,14 +8,12 @@ import cryptoHub.service.AuthUserService;
 import cryptoHub.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -25,6 +23,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final AuthUserService authUserService;
     private final JwtUtil jwtUtil;
+    private final AuthenticationManager authenticationManager;
 
     @PostMapping("/register")
     public ResponseEntity<UserEntity> registerUser(@RequestBody UserEntity userPayload) throws Exception {
@@ -47,20 +46,25 @@ public class AuthController {
             throw new Exception("User not found with " + loginRequestDto.getEmail());
         }
         boolean isCredentialsValid = authUserService.isCredentialsValid(loginRequestDto);
-        System.out.println("isCredentialsValid : "+isCredentialsValid);
+
         if (!isCredentialsValid) {
             throw new Exception("Provided credentials are invalid...!");
         }
+
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 loginRequestDto.getEmail(), loginRequestDto.getPassword()
         );
-        System.out.println("authentication.getAuthorities()" + authentication.getAuthorities());
-        System.out.println("authentication.getPrincipal()" + authentication.getPrincipal());
-        System.out.println("authentication.getCredentials()" + authentication.getCredentials());
+        Authentication authResult = authenticationManager.authenticate(authentication);
+        System.out.println("authentication : " + authResult.isAuthenticated());
+        System.out.println("authentication.getPrincipal() : " + authResult.getPrincipal());
+        System.out.println("USER : " + user);
+        SecurityContextHolder.getContext().setAuthentication(authResult);
+
         String accessToken = jwtUtil.generateJwtToken(loginRequestDto.getEmail(), 10, authentication);
         String refreshToken = jwtUtil.generateJwtToken(loginRequestDto.getEmail(), 60 * 24 * 7, authentication);
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
+
         LoginResponseDto loginResponse = LoginResponseDto.builder()
                 .accessToken(accessToken)
                 .refreshToken(user.getRefreshToken())

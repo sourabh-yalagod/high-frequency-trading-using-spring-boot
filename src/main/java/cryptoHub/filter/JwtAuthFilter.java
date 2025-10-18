@@ -51,8 +51,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (!response.isCommitted()) {
                 errorHandlerForFilters.writeErrorResponse(response, HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
             }
-            return;
         }
-        filterChain.doFilter(request, response);
     }
 }
