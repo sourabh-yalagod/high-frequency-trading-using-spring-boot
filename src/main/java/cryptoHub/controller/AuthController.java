@@ -14,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -39,6 +40,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Transactional
     public ResponseEntity<LoginResponseDto> loginUser(@RequestBody LoginRequestDto loginRequestDto) throws Exception {
         System.out.println("LoginRequestDto : " + loginRequestDto);
         UserEntity user = authUserService.loadUserByUsername(loginRequestDto.getEmail());
@@ -56,8 +58,6 @@ public class AuthController {
         );
         Authentication authResult = authenticationManager.authenticate(authentication);
         System.out.println("authentication : " + authResult.isAuthenticated());
-        System.out.println("authentication.getPrincipal() : " + authResult.getPrincipal());
-        System.out.println("USER : " + user);
         SecurityContextHolder.getContext().setAuthentication(authResult);
 
         String accessToken = jwtUtil.generateJwtToken(loginRequestDto.getEmail(), 10, authentication);

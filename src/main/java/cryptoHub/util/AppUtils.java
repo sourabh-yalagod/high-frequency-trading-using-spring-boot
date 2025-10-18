@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.web.client.RestTemplate;
 
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
 
@@ -53,5 +54,10 @@ public class AppUtils {
             e.printStackTrace();
         }
         return null;
+    }
+    public static String generateOTP() {
+        SecureRandom random = new SecureRandom();
+        int otp = 100000 + random.nextInt(900000); // generates number between 100000–999999
+        return String.valueOf(otp);
     }
 }

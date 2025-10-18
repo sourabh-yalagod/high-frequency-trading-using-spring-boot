@@ -1,9 +1,10 @@
 package cryptoHub.service;
 
-import ch.qos.logback.core.encoder.EchoEncoder;
-import cryptoHub.entity.TwoFactorOtpEntity;
+import cryptoHub.entity.TwoFactorAuthEntity;
 import cryptoHub.entity.UserEntity;
+import cryptoHub.repository.TwoFactorAuthRepository;
 import cryptoHub.repository.UserRepository;
+import cryptoHub.util.AppUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,9 +14,25 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-    private final TwoFactorOtpService twoFactorOtpService;
-    public TwoFactorOtpEntity verifyUserAccount(String userId) throws Exception {
-        Optional<UserEntity> user = userRepository.findById(userId);
-        return twoFactorOtpService.createTwoFactorOtp(user,"90");
+    private final TwoFactorAuthService twoFactorAuthService;
+    private final TwoFactorAuthRepository twoFactorAuthRepository;
+
+    public TwoFactorAuthEntity verifyUserAccount(String userId,String otp) throws Exception {
+        Optional<TwoFactorAuthEntity> twoFactorAuthEntity = twoFactorAuthRepository.findById(userId);
+        return twoFactorAuthService.createTwoFactorOtp(twoFactorAuthEntity, "90");
     }
+
+    public Optional<UserEntity> findUserById(String userId) {
+        return userRepository.findById(userId);
+    }
+
+    public TwoFactorAuthEntity handleOtpRequestForAccountVerification(String userId) throws Exception {
+        TwoFactorAuthEntity twoFactorAuthEntity = twoFactorAuthRepository.findTwoFactorEntityByUserId(userId)
+                .orElseThrow(() -> new Exception("User not found!"));
+        System.out.println("twoFactorAuthEntity : " + twoFactorAuthEntity);
+        String otp = AppUtils.generateOTP();
+        twoFactorAuthEntity.setOtp(otp);
+        return twoFactorAuthRepository.save(twoFactorAuthEntity);
+    }
+
 }

@@ -10,6 +10,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.security.SecureRandom;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -58,4 +59,5 @@ public class JwtUtil {
             return false;
         }
     }
+
 }

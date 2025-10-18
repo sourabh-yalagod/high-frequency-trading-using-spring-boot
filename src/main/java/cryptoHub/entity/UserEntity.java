@@ -1,5 +1,6 @@
 package cryptoHub.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import cryptoHub.types.RolesEnum;
 import jakarta.persistence.*;
@@ -23,7 +24,6 @@ public class UserEntity implements UserDetails {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(name = "username")
     private String username;
 
     private String email;
