@@ -1,0 +1,75 @@
+package cryptoHub.controller;
+
+import cryptoHub.dto.LoginRequestDto;
+import cryptoHub.dto.LoginResponseDto;
+import cryptoHub.entity.UserEntity;
+import cryptoHub.repository.UserRepository;
+import cryptoHub.service.AuthUserService;
+import cryptoHub.util.JwtUtil;
+import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
+public class AuthController {
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthUserService authUserService;
+    private final JwtUtil jwtUtil;
+    private final AuthenticationManager authenticationManager;
+
+    @PostMapping("/register")
+    public ResponseEntity<UserEntity> registerUser(@RequestBody UserEntity userPayload) throws Exception {
+        String identifier = userPayload.getEmail();
+        if (identifier.isBlank()) identifier = userPayload.getUsername();
+        UserEntity isUserExist = userRepository.findUserByUsernameOrEmail(userPayload.getUsername(), userPayload.getEmail());
+        if (isUserExist != null) {
+            throw new Exception(identifier + " Already used for Account Creation please try something different");
+        }
+        UserEntity user = authUserService.registerUser(userPayload);
+        return ResponseEntity.ok(user);
+    }
+
+    @PostMapping("/login")
+    @Transactional
+    public ResponseEntity<LoginResponseDto> loginUser(@RequestBody LoginRequestDto loginRequestDto) throws Exception {
+        System.out.println("LoginRequestDto : " + loginRequestDto);
+        UserEntity user = authUserService.loadUserByUsername(loginRequestDto.getEmail());
+        if (user == null) {
+            throw new Exception("User not found with " + loginRequestDto.getEmail());
+        }
+        boolean isCredentialsValid = authUserService.isCredentialsValid(loginRequestDto);
+
+        if (!isCredentialsValid) {
+            throw new Exception("Provided credentials are invalid...!");
+        }
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                loginRequestDto.getEmail(), loginRequestDto.getPassword()
+        );
+        Authentication authResult = authenticationManager.authenticate(authentication);
+        System.out.println("authentication : " + authResult.isAuthenticated());
+        SecurityContextHolder.getContext().setAuthentication(authResult);
+
+        String accessToken = jwtUtil.generateJwtToken(loginRequestDto.getEmail(), 10, authentication);
+        String refreshToken = jwtUtil.generateJwtToken(loginRequestDto.getEmail(), 60 * 24 * 7, authentication);
+        user.setRefreshToken(refreshToken);
+        userRepository.save(user);
+
+        LoginResponseDto loginResponse = LoginResponseDto.builder()
+                .accessToken(accessToken)
+                .refreshToken(user.getRefreshToken())
+                .id(user.getId())
+                .build();
+        return ResponseEntity.ok(loginResponse);
+    }
+}
