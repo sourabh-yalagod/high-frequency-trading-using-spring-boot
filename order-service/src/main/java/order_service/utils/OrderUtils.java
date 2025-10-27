@@ -81,13 +81,14 @@ public class OrderUtils {
         return rawOrders.stream().map(obj -> (OrderRequestDto) obj).collect(Collectors.toList());
     }
 
-    public WebSocketResponseDto customWebSocketResponse(OrderRequestDto order, String message, boolean isLocked) {
+    public WebSocketResponseDto customWebSocketResponse(OrderRequestDto order, String message, boolean isLocked, OrderStatus orderStatus) {
         return WebSocketResponseDto.builder()
                 .price(order.getPrice())
                 .quantity(order.getQuantity())
                 .message(message)
                 .assets(order.getAsset())
                 .UserId(order.getUserId())
+                .orderStatus(orderStatus)
                 .isLocked(isLocked)
                 .build();
     }

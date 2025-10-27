@@ -64,9 +64,9 @@ public class OrderService {
                 order.setCreatedAt(LocalDateTime.now().toString());
                 buyOrders.add(order);
                 orderUtils.cacheData(BTC_BUY_ORDER_KEY, buyOrders);
-                orderUtils.webHookResponse(order.getCallUrl(), orderUtils.customWebSocketResponse(order, "Order Queued waiting for seller liquidity", false));
+                orderUtils.webHookResponse(order.getCallUrl(), orderUtils.customWebSocketResponse(order, "Order Queued waiting for seller liquidity", false, OrderStatus.PENDING));
             } else {
-                orderUtils.webHookResponse(order.getCallUrl(), orderUtils.customWebSocketResponse(order, "Insufficient liquidity: need " + (order.getQuantity() - totalAvailableQty) + " more sell quantity below $" + order.getPrice(), true));
+                orderUtils.webHookResponse(order.getCallUrl(), orderUtils.customWebSocketResponse(order, "Insufficient liquidity: need " + (order.getQuantity() - totalAvailableQty) + " more sell quantity below $" + order.getPrice(), true, OrderStatus.REJECTED));
             }
             return null;
         }
@@ -90,29 +90,19 @@ public class OrderService {
                     // Partially fill sell order
                     double leftover = sellOrder.getQuantity() - remainingQty;
                     sellOrder.setQuantity(leftover);
-                    transactions.add(
-                            new OrderRequestDto(
-                                    sellOrder.getAsset(),
-                                    sellOrder.getUserId(),
-                                    sellOrder.getOrderType(),
-                                    sellOrder.getPrice(),
-                                    sellOrder.getCallUrl(),
-                                    remainingQty,
-                                    sellOrder.getMargin(),
-                                    sellOrder.getStatus(),
-                                    sellOrder.getOrderSide()));
+                    transactions.add(new OrderRequestDto(sellOrder.getAsset(), sellOrder.getUserId(), sellOrder.getOrderType(), sellOrder.getPrice(), sellOrder.getCallUrl(), remainingQty, sellOrder.getMargin(), sellOrder.getStatus(), sellOrder.getOrderSide()));
                     remainingQty = 0;
-                    orderUtils.webHookResponse(sellOrder.getCallUrl(), orderUtils.customWebSocketResponse(sellOrder, "Order partially filled. Please wait for further " + sellOrder.getQuantity() + " to get filled.", true));
+                    orderUtils.webHookResponse(sellOrder.getCallUrl(), orderUtils.customWebSocketResponse(sellOrder, "Order partially filled. Please wait for further " + sellOrder.getQuantity() + " to get filled.", true, OrderStatus.PENDING));
                     break;
                 }
             }
         }
         toRemove.forEach((filledOrder) -> {
             filledOrder.setStatus(OrderStatus.OPEN);
-            orderUtils.webHookResponse(filledOrder.getCallUrl(), orderUtils.customWebSocketResponse(filledOrder, "Order filled", false));
+            orderUtils.webHookResponse(filledOrder.getCallUrl(), orderUtils.customWebSocketResponse(filledOrder, "Order filled", false, OrderStatus.OPEN));
         });
         order.setStatus(OrderStatus.OPEN);
-        orderUtils.webHookResponse(order.getCallUrl(), orderUtils.customWebSocketResponse(order, "Buy order executed successfully", false));
+        orderUtils.webHookResponse(order.getCallUrl(), orderUtils.customWebSocketResponse(order, "Buy order executed successfully", false, OrderStatus.OPEN));
         // Remove fully matched orders and update cache
         sellOrders.removeAll(toRemove);
         orderUtils.cacheData(BTC_SELL_ORDER_KEY, sellOrders);
@@ -121,89 +111,78 @@ public class OrderService {
         return transactions;
     }
 
-
-    private List<OrderRequestDto> processSellOrder(OrderRequestDto sellOrder) throws Exception {
+    private List<OrderRequestDto> processSellOrder(OrderRequestDto order) throws Exception {
         ZSetOperations<String, Object> zSetOps = redisTemplate.opsForZSet();
 
-        // Fetch all buy orders from redis cache (sorted descending by price)
+        // Fetch all BUY orders from cache (sorted descending)
         Set<Object> buyRawOrders = zSetOps.reverseRange(BTC_BUY_ORDER_KEY, 0, -1);
         List<OrderRequestDto> buyOrders = buyRawOrders == null ? new ArrayList<>() : orderUtils.mapOrders(buyRawOrders);
-
-        List<OrderRequestDto> transactions = new ArrayList<>();
-        List<OrderRequestDto> executedBuyOrders = new ArrayList<>();
-
-        double remainingQty = sellOrder.getQuantity();
-
-        // Match the SELL order against BUY orders
+        double totalAvailableQty = 0;
         for (OrderRequestDto buyOrder : buyOrders) {
-            // Sell can only execute if buyer's price >= seller's price
-            if (buyOrder.getPrice() < sellOrder.getPrice()) continue;
-
-            // Determine matched quantity
-            double matchedQty = Math.min(remainingQty, buyOrder.getQuantity());
-
-            // Create transaction records
-            transactions.add(
-                    new OrderRequestDto(
-                            sellOrder.getAsset(),
-                            sellOrder.getUserId(),
-                            sellOrder.getOrderType(),
-                            sellOrder.getPrice(),
-                            sellOrder.getCallUrl(),
-                            matchedQty,
-                            sellOrder.getMargin(),
-                            OrderStatus.OPEN,
-                            sellOrder.getOrderSide(),
-                            LocalDateTime.now().toString()));
-
-            transactions.add(
-                    new OrderRequestDto(
-                            buyOrder.getAsset(),
-                            buyOrder.getUserId(),
-                            buyOrder.getOrderType(),
-                            buyOrder.getPrice(),
-                            buyOrder.getCallUrl(),
-                            matchedQty,
-                            buyOrder.getMargin(),
-                            OrderStatus.OPEN,
-                            buyOrder.getOrderSide(),
-                            LocalDateTime.now().toString()));
-
-            // Update quantities
-            remainingQty -= matchedQty;
-            buyOrder.setQuantity(buyOrder.getQuantity() - matchedQty);
-
-            if (buyOrder.getQuantity() <= 0) {
-                executedBuyOrders.add(buyOrder);
+            if (buyOrder.getPrice() >= order.getPrice()) {
+                totalAvailableQty += buyOrder.getQuantity();
+                if (totalAvailableQty >= order.getQuantity()) break;
             }
-
-            if (remainingQty <= 0) break;
         }
 
-        // Remove executed buy orders from the book
-        buyOrders.removeAll(executedBuyOrders);
-        orderUtils.cacheData(BTC_BUY_ORDER_KEY, buyOrders);
-
-        // If still remaining quantity (partially filled or unfilled)
-        if (remainingQty > 0) {
-            if (sellOrder.getOrderType() == OrderType.LIMIT) {
-                // Add remaining sell order to SELL book
+        // Handling Not enough liquidity scenario
+        if (totalAvailableQty < order.getQuantity()) {
+            if (order.getOrderType().equals(OrderType.LIMIT)) {
+                // Queue sell order in cache
                 Set<Object> sellRawOrders = zSetOps.range(BTC_SELL_ORDER_KEY, 0, -1);
                 List<OrderRequestDto> sellOrders = sellRawOrders == null ? new ArrayList<>() : orderUtils.mapOrders(sellRawOrders);
-
-                sellOrder.setQuantity(remainingQty);
-                sellOrder.setCreatedAt(LocalDateTime.now().toString());
-                sellOrders.add(sellOrder);
-
+                order.setCreatedAt(LocalDateTime.now().toString());
+                sellOrders.add(order);
                 orderUtils.cacheData(BTC_SELL_ORDER_KEY, sellOrders);
-                orderUtils.webHookResponse(sellOrder.getCallUrl(), orderUtils.customWebSocketResponse(sellOrder, "Order partially filled and remaining added to sell book.", true));
+                orderUtils.webHookResponse(order.getCallUrl(), orderUtils.customWebSocketResponse(order, "Order Queued waiting for buyer liquidity", false, OrderStatus.PENDING));
             } else {
-                orderUtils.webHookResponse(sellOrder.getCallUrl(), orderUtils.customWebSocketResponse(sellOrder, "Market sell order partially filled. Remaining " + remainingQty + " could not be matched.", true));
+                orderUtils.webHookResponse(order.getCallUrl(), orderUtils.customWebSocketResponse(order, "Insufficient liquidity: need " + (order.getQuantity() - totalAvailableQty) + " more buy quantity above $" + order.getPrice(), true, OrderStatus.REJECTED));
             }
-        } else {
-            orderUtils.webHookResponse(sellOrder.getCallUrl(), orderUtils.customWebSocketResponse(sellOrder, "Sell order fully executed.", false));
+            return null;
         }
+
+        // Perform Order Matching
+        List<OrderRequestDto> transactions = new ArrayList<>();
+        List<OrderRequestDto> toRemove = new ArrayList<>();
+        transactions.add(order);
+
+        double remainingQty = order.getQuantity();
+
+        for (OrderRequestDto buyOrder : buyOrders) {
+            if (remainingQty <= 0) break;
+            if (buyOrder.getPrice() >= order.getPrice()) {
+                if (buyOrder.getQuantity() <= remainingQty) {
+                    // Fully consume this buy order
+                    remainingQty -= buyOrder.getQuantity();
+                    toRemove.add(buyOrder);
+                    transactions.add(buyOrder);
+                } else {
+                    // Partially fill buy order
+                    double leftover = buyOrder.getQuantity() - remainingQty;
+                    buyOrder.setQuantity(leftover);
+                    transactions.add(new OrderRequestDto(buyOrder.getAsset(), buyOrder.getUserId(), buyOrder.getOrderType(), buyOrder.getPrice(), buyOrder.getCallUrl(), remainingQty, buyOrder.getMargin(), buyOrder.getStatus(), buyOrder.getOrderSide()));
+                    remainingQty = 0;
+                    orderUtils.webHookResponse(buyOrder.getCallUrl(), orderUtils.customWebSocketResponse(buyOrder, "Order partially filled. Please wait for further " + buyOrder.getQuantity() + " to get filled.", true, OrderStatus.PENDING));
+                    break;
+                }
+            }
+        }
+
+        // Notify filled orders
+        toRemove.forEach((filledOrder) -> {
+            filledOrder.setStatus(OrderStatus.OPEN);
+            orderUtils.webHookResponse(filledOrder.getCallUrl(), orderUtils.customWebSocketResponse(filledOrder, "Order filled", false, OrderStatus.OPEN));
+        });
+
+        // Notify current sell order
+        order.setStatus(OrderStatus.OPEN);
+        orderUtils.webHookResponse(order.getCallUrl(), orderUtils.customWebSocketResponse(order, "Sell order executed successfully", false, OrderStatus.OPEN));
+
+        // Remove fully matched orders and update cache
+        buyOrders.removeAll(toRemove);
+        orderUtils.cacheData(BTC_BUY_ORDER_KEY, buyOrders);
+
+        // Notify or process transactions
         return transactions;
     }
-
 }

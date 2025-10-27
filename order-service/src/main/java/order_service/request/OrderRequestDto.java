@@ -1,6 +1,7 @@
 package order_service.request;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import order_service.types.Assets;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class OrderRequestDto {
     private Assets asset;
     private String userId;
