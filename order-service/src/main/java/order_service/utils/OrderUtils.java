@@ -13,9 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -48,22 +46,27 @@ public class OrderUtils {
 
         ZSetOperations<String, Object> zSetOps = redisTemplate.opsForZSet();
 
-        Set<ZSetOperations.TypedTuple<Object>> orderTuples = ordersList.stream().filter(order -> order != null && order.getPrice() != null).map(order -> new ZSetOperations.TypedTuple<Object>() {
-            @Override
-            public Object getValue() {
-                return order;
-            }
+        Set<ZSetOperations.TypedTuple<Object>> orderTuples = ordersList.stream()
+                .filter(order -> order != null && order.getPrice() != null)
+                .map(order -> new ZSetOperations.TypedTuple<Object>() {
+                    @Override
+                    public Object getValue() {
+                        if (order.getOrderId() == null) {
+                            order.setOrderId(UUID.randomUUID().toString());
+                        }
+                        return order;
+                    }
 
-            @Override
-            public Double getScore() {
-                return order.getPrice();
-            }
+                    @Override
+                    public Double getScore() {
+                        return order.getPrice();
+                    }
 
-            @Override
-            public int compareTo(ZSetOperations.TypedTuple<Object> o) {
-                return Double.compare(getScore(), o.getScore());
-            }
-        }).collect(Collectors.toSet());
+                    @Override
+                    public int compareTo(ZSetOperations.TypedTuple<Object> o) {
+                        return Double.compare(getScore(), o.getScore());
+                    }
+                }).collect(Collectors.toCollection(LinkedHashSet::new));
 
         if (orderTuples.isEmpty()) {
             System.out.println("⚠️ No valid orders to cache for key: " + key);

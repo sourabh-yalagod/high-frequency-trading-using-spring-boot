@@ -27,6 +27,7 @@ public class OrderController {
     private final OrderService orderService;
     private final OrderUtils orderUtils;
     private final RedisTemplate<String, Object> redisTemplate;
+
     @PostMapping("/order")
     public void newOrder(@RequestBody OrderRequestDto payload) throws Exception {
         orderService.process(payload);
@@ -47,11 +48,11 @@ public class OrderController {
 
         // Fetch all SELL orders from cache
         System.out.println("Sell Orders");
-        Set<Object> sellRawOrders = zSetOps.reverseRange("btc:sell:orders", 0, -1);
+        Set<Object> sellRawOrders = zSetOps.range("btc:sell:orders", 0, -1);
         List<OrderRequestDto> sellOrders = sellRawOrders == null ? new ArrayList<>() : orderUtils.mapOrders(sellRawOrders);
         sellOrders.forEach(System.out::println);
         System.out.println("Buyers Orders");
-        Set<Object> buyRawOrders = zSetOps.range("btc:sell:orders", 0, -1);
+        Set<Object> buyRawOrders = zSetOps.reverseRange("btc:buy:orders", 0, -1);
         List<OrderRequestDto> buyOrders = buyRawOrders == null ? new ArrayList<>() : orderUtils.mapOrders(buyRawOrders);
         buyOrders.forEach(System.out::println);
     }
@@ -59,8 +60,8 @@ public class OrderController {
     public OrderRequestDto randomOrders() {
         Random random = new Random();
 
-        int price = 1 + (100 - 1) * random.nextInt();
-        int quantity = 1 + (10 - 1) * random.nextInt();
+        double price = Math.floor(1 + (100 - 1) * random.nextDouble());
+        double quantity = Math.floor(1 + (10 - 1) * random.nextDouble());
         OrderSide orderSide = random.nextBoolean() ? OrderSide.BUY : OrderSide.SELL;
 
         String userId = "user - " + (random.nextInt(1000) + 1);
@@ -70,9 +71,9 @@ public class OrderController {
                 .asset(Assets.BTC)
                 .userId(userId)
                 .orderType(OrderType.LIMIT)
-                .price((double) price)
+                .price(price)
                 .callUrl(callUrl)
-                .quantity((double) quantity)
+                .quantity(quantity)
                 .margin("0.01")
                 .status(OrderStatus.PENDING)
                 .orderSide(orderSide)
