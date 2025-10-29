@@ -1,6 +1,7 @@
 package org.example.entity;
 
-import jakarta.persistence.Column;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,21 +17,25 @@ import org.hibernate.annotations.UpdateTimestamp;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class OrderRequestDto {
-    private Assets asset;
+@Entity
+@Table(name = "orders")
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class OrderEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(nullable = false, updatable = false)
+    private String id;
+    private String orderId;
     private String userId;
+    private Assets asset;
     private OrderType orderType;
     private Double price;
-    private String callUrl;
     private Double quantity;
+    private Double executedQuantity;
     private String margin;
     private OrderStatus status;
     private OrderSide orderSide;
-
-    @CreationTimestamp
-    @Column(updatable = false)
     private String createdAt;
-
     @UpdateTimestamp
     private String updateAt;
 }
