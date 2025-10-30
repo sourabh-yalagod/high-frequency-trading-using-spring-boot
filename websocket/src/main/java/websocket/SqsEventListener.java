@@ -7,19 +7,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.sqs.annotation.SqsListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 import websocket.response.OrderDto;
 import websocket.response.WebsocketResponse;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Component
 @Slf4j
 public class SqsEventListener {
-    ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+    private final SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    public SqsEventListener(ObjectMapper objectMapper, SimpMessagingTemplate messagingTemplate) {
+        this.objectMapper = objectMapper;
+        this.messagingTemplate = messagingTemplate;
+    }
 
     @SqsListener("btc-orderBook.fifo")
     public void handleOrderEvent(String event) throws JsonProcessingException {
@@ -31,11 +39,10 @@ public class SqsEventListener {
             );
             List<OrderDto> buyOrders = orderBookMap.get("buyOrders");
             List<OrderDto> sellOrders = orderBookMap.get("sellOrders");
-            System.out.println("ORDER : " + buyOrders);
             // Build proper order book
             WebsocketResponse response = new WebsocketResponse(buyOrders, sellOrders);
             JsonNode json = objectMapper.convertValue(response, JsonNode.class);
-            System.out.println("✅ Sent order book update: " + json);
+            messagingTemplate.convertAndSend("/topic/orderBook/BTC", json);
         } catch (Exception e) {
             log.error("Error processing SQS event", e);
             throw e;
