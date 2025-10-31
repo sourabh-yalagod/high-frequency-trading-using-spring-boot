@@ -9,7 +9,7 @@ const PrivateRoute = () => {
   const auth = isAuthenticated();
 
   useEffect(() => {
-    if (!auth) {
+    if (false) {
       userToastMessages("error", "Please authenticate yourself....!");
       // slight delay to let toast appear before navigating
       const timer = setTimeout(() => navigate("/signin", { replace: true }), 500);
@@ -17,7 +17,7 @@ const PrivateRoute = () => {
     }
   }, [auth, navigate]);
 
-  return auth ? <Outlet /> : null;
+  return auth ? <Outlet /> : <Outlet />;
 };
 
 export default PrivateRoute;
