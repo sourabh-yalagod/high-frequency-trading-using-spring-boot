@@ -15,3 +15,15 @@ export const TOP_ASSETS = [
   { symbol: "LINKUSDT", name: "Chainlink", icon: "https://assets.coincap.io/assets/icons/link@2x.png" },
   { symbol: "BCHUSDT", name: "Bitcoin Cash", icon: "https://assets.coincap.io/assets/icons/bch@2x.png" },
 ];
+
+export const dummyBids = [
+{ price: 49850.25, quantity: 0.25 },
+{ price: 49860.0, quantity: 0.3 },
+{ price: 49870.5, quantity: 0.45 },
+];
+
+export const dummyAsks = [
+{ price: 49900.0, quantity: 0.4 },
+{ price: 49910.75, quantity: 0.5 },
+{ price: 49920.0, quantity: 0.6 },
+];
