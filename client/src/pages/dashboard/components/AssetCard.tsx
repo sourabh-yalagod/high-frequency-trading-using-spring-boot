@@ -1,3 +1,5 @@
+import { useNavigate, useNavigation } from "react-router-dom";
+
 type AssetCardProps = {
   icon: string;
   name: string;
@@ -14,9 +16,12 @@ const AssetCard = ({ icon, name, symbol, price, prevPrice, changeDir }: AssetCar
   const prev = parseFloat(prevPrice || price || "0");
   const isUp = changeDir === "up";
   const isDown = changeDir === "down";
-
+  const navigate = useNavigate()
+  const onClick = () => {
+    navigate("/chart/" + symbol)
+  }
   return (
-    <div className="flex flex-col p-3 gap-2 border rounded-xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:shadow-md transition">
+    <div onClick={onClick} className="flex flex-col cursor-pointer p-3 gap-2 border rounded-xl dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:shadow-md transition">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img
@@ -32,9 +37,8 @@ const AssetCard = ({ icon, name, symbol, price, prevPrice, changeDir }: AssetCar
         </div>
         <div className="text-right">
           <div
-            className={`text-lg font-bold leading-5 ${
-              isUp ? "text-green-500" : isDown ? "text-red-500" : "text-blue-600 dark:text-blue-400"
-            }`}
+            className={`text-lg font-bold leading-5 ${isUp ? "text-green-500" : isDown ? "text-red-500" : "text-blue-600 dark:text-blue-400"
+              }`}
           >
             ${isNaN(current) ? "0.00" : current.toFixed(2)}
           </div>
@@ -46,9 +50,8 @@ const AssetCard = ({ icon, name, symbol, price, prevPrice, changeDir }: AssetCar
 
       <div className="h-1 w-full rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
         <div
-          className={`h-full rounded-full transition-all duration-300 ${
-            isUp ? "bg-green-400" : isDown ? "bg-red-400" : "bg-transparent"
-          }`}
+          className={`h-full rounded-full transition-all duration-300 ${isUp ? "bg-green-400" : isDown ? "bg-red-400" : "bg-transparent"
+            }`}
           style={{
             width:
               prev && !isNaN(prev)

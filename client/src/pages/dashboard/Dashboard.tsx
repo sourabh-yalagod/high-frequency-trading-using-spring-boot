@@ -78,7 +78,6 @@ const Dashboard = () => {
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
       <Header connected={connected} />
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6">
-        <h2 className="text-2xl font-semibold mb-4">Top 15 Markets — Live</h2>
         <AssetGrid assets={assets} />
       </main>
       <Footer />
