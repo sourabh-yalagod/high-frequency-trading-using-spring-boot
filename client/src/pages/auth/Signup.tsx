@@ -2,6 +2,7 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
+import { toast } from "sonner";
 
 const Signup = () => {
   const initialValues = {
@@ -24,13 +25,13 @@ const Signup = () => {
 
   const handleSubmit = (values: typeof initialValues, { resetForm }: any) => {
     console.log("Signup form submitted:", values);
-    // Example: await axios.post('/api/auth/signup', values);
     resetForm();
   };
 
   const handleSSOLogin = (provider: string) => {
     console.log(`Signing up with ${provider}`);
-    // Example: redirect to your OAuth route → /api/auth/${provider}
+    const backendURL = import.meta.env.VITE_BACKEND_URL;
+    window.location.href = `${backendURL}/auth/${provider}`;
   };
 
   return (
@@ -45,7 +46,7 @@ const Signup = () => {
           <button
             type="button"
             onClick={() => handleSSOLogin("google")}
-            className="w-full flex items-center justify-center gap-2 border border-gray-300 dark:border-gray-600 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+            className="w-full flex items-center cursor-pointer justify-center gap-2 border border-gray-300 dark:border-gray-600 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
           >
             <FcGoogle size={22} />
             <span className="text-gray-700 dark:text-gray-200 font-medium">
@@ -59,7 +60,7 @@ const Signup = () => {
             className="w-full flex items-center justify-center gap-2 border border-gray-300 dark:border-gray-600 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
           >
             <FaGithub size={22} className="text-gray-800 dark:text-gray-100" />
-            <span className="text-gray-700 dark:text-gray-200 font-medium">
+            <span className="text-gray-700 cursor-pointer dark:text-gray-200 font-medium">
               Sign up with GitHub
             </span>
           </button>

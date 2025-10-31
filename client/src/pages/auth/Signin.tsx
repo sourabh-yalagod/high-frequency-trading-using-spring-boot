@@ -23,8 +23,8 @@ const Signin = () => {
   };
 
   const handleSSOLogin = (provider: string) => {
-    console.log(`Signing in with ${provider}`);
-    // Example: redirect to /api/auth/${provider}
+    const backendURL = import.meta.env.VITE_BACKEND_URL;
+    window.location.href = `${backendURL}/auth/${provider}`;
   };
 
   return (
@@ -39,7 +39,7 @@ const Signin = () => {
           <button
             type="button"
             onClick={() => handleSSOLogin("google")}
-            className="w-full flex items-center justify-center gap-2 border border-gray-300 dark:border-gray-600 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+            className="w-full flex items-center cursor-pointer justify-center gap-2 border border-gray-300 dark:border-gray-600 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
           >
             <FcGoogle size={22} />
             <span className="text-gray-700 dark:text-gray-200 font-medium">
@@ -50,7 +50,7 @@ const Signin = () => {
           <button
             type="button"
             onClick={() => handleSSOLogin("github")}
-            className="w-full flex items-center justify-center gap-2 border border-gray-300 dark:border-gray-600 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+            className="w-full flex items-center cursor-pointer justify-center gap-2 border border-gray-300 dark:border-gray-600 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
           >
             <FaGithub size={22} className="text-gray-800 dark:text-gray-100" />
             <span className="text-gray-700 dark:text-gray-200 font-medium">
