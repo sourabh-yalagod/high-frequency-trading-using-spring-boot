@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 
 type AssetCardProps = {
   icon: string;
@@ -15,12 +16,12 @@ const AssetCard = ({ icon, name, symbol, price, prevPrice, changeDir }: AssetCar
   const prev = parseFloat(prevPrice || price || "0");
   const isUp = changeDir === "up";
   const isDown = changeDir === "down";
-
+  const navigate = useNavigate()
   const percentChange = prev && !isNaN(prev) ? (((current - prev) / prev) * 100) : 0;
   const percentChangeAbs = Math.abs(percentChange);
 
   const handleClick = () => {
-    // navigate("/chart/" + symbol)
+    navigate("/chart/" + symbol)
     console.log(`Navigate to /chart/${symbol}`);
   };
 
@@ -56,10 +57,10 @@ const AssetCard = ({ icon, name, symbol, price, prevPrice, changeDir }: AssetCar
         <div className="text-right">
           <div
             className={`text-xs font-bold leading-tight whitespace-nowrap ${isUp
-                ? "text-green-600 dark:text-green-400"
-                : isDown
-                  ? "text-red-600 dark:text-red-400"
-                  : "text-blue-600 dark:text-blue-400"
+              ? "text-green-600 dark:text-green-400"
+              : isDown
+                ? "text-red-600 dark:text-red-400"
+                : "text-blue-600 dark:text-blue-400"
               }`}
           >
             ${isNaN(current) ? "0.00" : current.toLocaleString(undefined, {
@@ -68,10 +69,10 @@ const AssetCard = ({ icon, name, symbol, price, prevPrice, changeDir }: AssetCar
             })}
           </div>
           <div className={`text-[9px] xl:text-[12px] font-medium whitespace-nowrap leading-tight ${isUp
-              ? "text-green-600 dark:text-green-400"
-              : isDown
-                ? "text-red-600 dark:text-red-400"
-                : "text-gray-500 dark:text-gray-400"
+            ? "text-green-600 dark:text-green-400"
+            : isDown
+              ? "text-red-600 dark:text-red-400"
+              : "text-gray-500 dark:text-gray-400"
             }`}>
             {percentChange >= 0 ? '+' : ''}{percentChange.toFixed(2)}%
           </div>

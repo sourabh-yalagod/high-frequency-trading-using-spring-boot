@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import LiveStatusBadge from "./LiveStatusBadge";
 import Logo from "./Logo";
 
@@ -12,10 +13,10 @@ const Header = ({ connected }: HeaderProps) => {
         <Logo />
         <nav className="flex items-center gap-4">
           <div className="hidden md:flex gap-6 text-sm font-medium">
-            <a href="/dashboard" className="hover:text-blue-500">Dashboard</a>
-            <a href="/chart/BTCUSDT" className="hover:text-blue-500">Charts</a>
-            <a href="/profile" className="hover:text-blue-500">Profile</a>
-            <a href="/settings" className="hover:text-blue-500">Settings</a>
+            <Link to="/dashboard" className="hover:text-blue-500">Dashboard</Link>
+            <Link to="/chart/BTCUSDT" className="hover:text-blue-500">Charts</Link>
+            <Link to="/profile" className="hover:text-blue-500">Profile</Link>
+            <Link to="/settings" className="hover:text-blue-500">Settings</Link>
           </div>
           <LiveStatusBadge connected={connected} />
         </nav>
