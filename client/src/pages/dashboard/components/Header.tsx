@@ -7,7 +7,7 @@ interface HeaderProps {
 
 const Header = ({ connected }: HeaderProps) => {
   return (
-    <header className="border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+    <header className="border-b">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center p-4 gap-3">
         <Logo />
         <nav className="flex items-center gap-4">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ReactApexChart from "react-apexcharts";
+import { options } from "../../utils/assetConstant";
 
 type TimeFrame = '15m' | '1h' | '4h' | '1d' | '1w' | '1M';
 
@@ -32,82 +33,6 @@ const ChartForSymbol = ({ symbol }: { symbol: string }) => {
             '1M': 730 * 24 * 60 * 60 * 1000, // 2 years
         };
         return { startTime: now - ranges[tf], endTime: now };
-    };
-
-    const options: any = {
-        chart: {
-            id: 'area-datetime',
-            type: 'area',
-            height: 350,
-            toolbar: { show: false },
-            zoom: { autoScaleYaxis: true },
-            animations: { enabled: true, speed: 800 },
-        },
-        stroke: {
-            curve: 'smooth',
-            width: 3,
-            colors: ['#00BFFF'],
-        },
-        markers: {
-            size: 0,
-            colors: ['#00BFFF'],
-            strokeColors: '#fff',
-            strokeWidth: 2,
-            hover: { size: 6 },
-        },
-        fill: {
-            type: 'gradient',
-            gradient: {
-                shade: 'dark',
-                type: 'vertical',
-                shadeIntensity: 0.5,
-                gradientToColors: ['#007BFF'],
-                inverseColors: false,
-                opacityFrom: 0.5,
-                opacityTo: 0.1,
-                stops: [0, 100],
-            },
-        },
-        grid: {
-            borderColor: 'rgba(255, 255, 255, 0.1)',
-            strokeDashArray: 3,
-            yaxis: { lines: { show: true } },
-        },
-        dataLabels: {
-            enabled: false,
-        },
-        xaxis: {
-            type: 'datetime',
-            labels: {
-                style: { colors: '#9CA3AF' },
-            },
-            axisBorder: {
-                color: 'rgba(255,255,255,0.1)',
-            },
-            axisTicks: {
-                color: 'rgba(255,255,255,0.1)',
-            },
-        },
-        yaxis: {
-            labels: {
-                style: {
-                    colors: '#9CA3AF',
-                },
-                formatter: (value: number) => value.toFixed(2),
-            },
-        },
-        tooltip: {
-            theme: 'dark',
-            style: {
-                fontSize: '13px',
-            },
-            x: {
-                format: 'dd MMM yyyy HH:mm',
-            },
-        },
-        theme: {
-            mode: 'dark',
-        },
     };
 
     useEffect(() => {
@@ -180,8 +105,8 @@ const ChartForSymbol = ({ symbol }: { symbol: string }) => {
                             key={tf.value}
                             onClick={() => setTimeFrame(tf.value)}
                             className={`px-4 py-2 rounded-lg font-medium transition-all ${timeFrame === tf.value
-                                    ? 'bg-blue-500 text-white shadow-lg'
-                                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                ? 'bg-blue-500 text-white shadow-lg'
+                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                 }`}
                         >
                             {tf.label}
