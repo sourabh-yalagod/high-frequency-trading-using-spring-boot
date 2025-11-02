@@ -1,4 +1,6 @@
 package org.example.types;
 
-public class OrderType {
+public enum OrderType {
+    MARKET,
+    LIMIT
 }

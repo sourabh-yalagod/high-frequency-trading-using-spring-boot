@@ -1,4 +1,8 @@
 package org.example.types;
 
-public class OrderStatus {
+public enum OrderStatus {
+    OPEN,
+    PENDING,
+    CLOSED,
+    REJECTED
 }

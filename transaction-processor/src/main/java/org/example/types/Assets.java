@@ -1,4 +1,5 @@
 package org.example.types;
 
-public class Assets {
+public enum Assets {
+    BTC
 }

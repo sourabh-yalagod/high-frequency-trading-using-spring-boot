@@ -1,33 +1,54 @@
 package org.example;
-
-
-import com.amazonaws.serverless.exceptions.ContainerInitializationException;
-import com.amazonaws.serverless.proxy.model.AwsProxyRequest;
-import com.amazonaws.serverless.proxy.model.AwsProxyResponse;
-import com.amazonaws.serverless.proxy.spring.SpringBootLambdaContainerHandler;
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.SQSEvent;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+import org.example.entity.OrderEntity;
+import org.example.repository.OrderRepository;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ApplicationContext;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
+public class StreamLambdaHandler implements RequestHandler<SQSEvent, String> {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static ApplicationContext applicationContext;
+    private static OrderRepository orderRepository;
 
-public class StreamLambdaHandler implements RequestStreamHandler {
-    private static SpringBootLambdaContainerHandler<AwsProxyRequest, AwsProxyResponse> handler;
     static {
-        try {
-            handler = SpringBootLambdaContainerHandler.getAwsProxyHandler(Application.class);
-        } catch (ContainerInitializationException e) {
-            // if we fail here. We re-throw the exception to force another cold start
-            e.printStackTrace();
-            throw new RuntimeException("Could not initialize Spring Boot application", e);
-        }
+        applicationContext = SpringApplication.run(Application.class);
+        orderRepository = applicationContext.getBean("orderRepository", OrderRepository.class);
     }
 
     @Override
-    public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context)
-            throws IOException {
-        handler.proxyStream(inputStream, outputStream, context);
+    public String handleRequest(SQSEvent event, Context context) {
+        try {
+            List<List<OrderEntity>> transactions = new ArrayList<>();
+            for (SQSEvent.SQSMessage transactionRecord : event.getRecords()) {
+                try {
+                    List<OrderEntity> transaction = objectMapper.readValue(transactionRecord.getBody(), new TypeReference<List<OrderEntity>>() {
+                    });
+                    transactions.add(transaction);
+                    context.getLogger().log("TRANSACTION : " + transaction.toString());
+                } catch (Exception e) {
+                    context.getLogger().log("Deserialization error: " + e.getMessage() + "\n");
+                }
+            }
+            processTransactions(transactions);
+
+        } catch (Exception e) {
+            context.getLogger().log("Error processing batch: " + e.getMessage() + "\n");
+            return "Processing Failed";
+
+        }
+        return "Transaction Executed...!";
+    }
+
+    @Transactional
+    public void processTransactions(List<List<OrderEntity>> transactions) {
+        transactions.forEach(transaction -> orderRepository.saveAll(transaction));
     }
 }

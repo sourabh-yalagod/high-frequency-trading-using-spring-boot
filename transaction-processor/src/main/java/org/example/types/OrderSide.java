@@ -1,4 +1,4 @@
-package org.example.entity;
+package org.example.types;
 
 public enum OrderSide {
     BUY,
