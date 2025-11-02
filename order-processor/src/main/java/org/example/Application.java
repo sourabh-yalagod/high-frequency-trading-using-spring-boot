@@ -1,19 +1,17 @@
 package org.example;
 
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Import;
-
-import org.example.controller.PingController;
-
 
 @SpringBootApplication
-// We use direct @Import instead of @ComponentScan to speed up cold starts
-// @ComponentScan(basePackages = "org.example.controller")
-@Import({ PingController.class })
-public class Application {
-
+public class Application implements CommandLineRunner {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        System.out.println("App Running on PORT : 8080");
     }
 }
