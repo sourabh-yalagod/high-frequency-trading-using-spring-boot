@@ -20,9 +20,10 @@ public class SqsService {
         try {
             if (orders == null || orders.isEmpty()) return;
             ObjectMapper objectMapper = new ObjectMapper();
-            String jsonBody = objectMapper.writeValueAsString(orders);
-            String queueUrl = orders.size() == 1 ? "https://sqs.eu-north-1.amazonaws.com/638335486382/btc-pending-orders.fifo" : "https://sqs.eu-north-1.amazonaws.com/638335486382/btc-transactions.fifo";
-            String messageGroupId = orders.size() == 1 ? "btc-pending-orders" : "btc-transactions";
+            boolean isPendingOrder = orders.size() == 1;
+            String jsonBody = objectMapper.writeValueAsString(isPendingOrder ? orders.getFirst() : orders);
+            String queueUrl = isPendingOrder ? "https://sqs.eu-north-1.amazonaws.com/638335486382/btc-pending-orders.fifo" : "https://sqs.eu-north-1.amazonaws.com/638335486382/btc-transactions.fifo";
+            String messageGroupId = isPendingOrder ? "btc-pending-orders" : "btc-transactions";
             SendMessageRequest request = SendMessageRequest.builder().
                     queueUrl(queueUrl)
                     .messageGroupId(messageGroupId)
@@ -31,7 +32,6 @@ public class SqsService {
                     .build();
             sqsClient.sendMessage(request);
         } catch (Exception e) {
-            System.out.println("Sqs Error Message : " + e.getMessage());
             throw new RuntimeException(e);
         }
     }

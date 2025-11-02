@@ -1,4 +1,4 @@
-package order_service.Response;
+package order_service.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

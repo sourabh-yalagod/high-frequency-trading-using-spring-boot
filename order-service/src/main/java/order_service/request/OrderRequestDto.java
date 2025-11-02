@@ -16,31 +16,16 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 public class OrderRequestDto {
-    private String orderId;
+    private String id;
     private Assets asset;
     private String userId;
     private OrderType orderType;
     private Double price;
     private String callUrl;
     private Double quantity;
+    private Double remainingQuantity;
     private String margin;
     private OrderStatus status;
     private OrderSide orderSide;
     private String createdAt;
-
-    // Custom constructor (if you want createdAt to be auto-generated)
-    public OrderRequestDto(String orderId, Assets asset, String userId, OrderType orderType, Double price, String callUrl,
-                           Double quantity, String margin, OrderStatus status, OrderSide orderSide) {
-        this.orderId = orderId;
-        this.asset = asset;
-        this.userId = userId;
-        this.orderType = orderType;
-        this.price = price;
-        this.callUrl = callUrl;
-        this.quantity = quantity;
-        this.margin = margin;
-        this.status = status;
-        this.orderSide = orderSide;
-        this.createdAt = LocalDateTime.now().toString();
-    }
 }

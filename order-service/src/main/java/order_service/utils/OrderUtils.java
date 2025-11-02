@@ -2,17 +2,15 @@ package order_service.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import order_service.Response.WebSocketResponseDto;
+import order_service.response.WebSocketResponseDto;
 import order_service.request.OrderRequestDto;
 import order_service.types.OrderStatus;
-import order_service.types.OrderType;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -29,8 +27,6 @@ public class OrderUtils {
                 RestClient restClient = RestClient.create();
                 String payload = new ObjectMapper().writeValueAsString(webSocketResponseDto);
                 restClient.post().uri(callBackUrl).contentType(MediaType.APPLICATION_JSON).body(payload).retrieve().toBodilessEntity();
-
-                System.out.println("Webhook sent asynchronously to: " + callBackUrl);
             } catch (Exception e) {
                 System.err.println("Failed to send async webhook: " + e.getMessage());
             }
@@ -39,7 +35,6 @@ public class OrderUtils {
 
     public void cacheData(String key, List<OrderRequestDto> ordersList) {
         if (ordersList == null || ordersList.isEmpty()) {
-            System.out.println("No orders to cache for key: " + key);
             redisTemplate.delete(key);
             return;
         }
@@ -51,8 +46,8 @@ public class OrderUtils {
                 .map(order -> new ZSetOperations.TypedTuple<Object>() {
                     @Override
                     public Object getValue() {
-                        if (order.getOrderId() == null) {
-                            order.setOrderId(UUID.randomUUID().toString());
+                        if (order.getId() == null) {
+                            order.setId(UUID.randomUUID().toString());
                         }
                         return order;
                     }
@@ -69,14 +64,12 @@ public class OrderUtils {
                 }).collect(Collectors.toCollection(LinkedHashSet::new));
 
         if (orderTuples.isEmpty()) {
-            System.out.println("⚠️ No valid orders to cache for key: " + key);
             redisTemplate.delete(key);
             return;
         }
 
         redisTemplate.delete(key);
         zSetOps.add(key, orderTuples);
-        System.out.println("Cached " + orderTuples.size() + " orders for key: " + key);
     }
 
     public List<OrderRequestDto> mapOrders(Set<Object> rawOrders) {
