@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { userToastMessages } from "../../utils/userToastMessages";
-import { usePriceContext } from "../../context/PriceContext";
-
+import React, { useEffect, useState } from "react";
+import { userToastMessages } from "../../../utils/userToastMessages";
+import { usePriceContext } from "../../../context/PriceContext";
+import axios from "axios";
 interface Order {
     id: string;
     userId: string;
@@ -24,7 +24,7 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
     const { getPrice } = usePriceContext();
 
     const [orderData, setOrderData] = useState(
-        orders.map((o) => ({ ...o, sl: "", tg: "" }))
+        orders.map((o: any) => ({ ...o, sl: o?.sl || "", tg: o.tg || "" }))
     );
     const [activeModal, setActiveModal] = useState<{
         id: string;
@@ -46,7 +46,14 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
                 return "text-gray-600 dark:text-gray-300";
         }
     };
-
+    useEffect(() => {
+        const webHookUrl = import.meta.env.VITE_BACKEND_URL + "/webhook"
+        axios.post(webHookUrl).then((res) => {
+            orderData.push(res.data)
+        }).catch(error => {
+            console.log(error);
+        })
+    }, [])
     const getPositionStatus = (order: Order) => {
         const current = Number(getPrice(order.asset.toUpperCase()));
 
@@ -74,6 +81,7 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
             prev.map((o) => (o.id === id ? { ...o, [field]: inputValue } : o))
         );
         setActiveModal({ id: "", field: null });
+        console.log(orderData);
     };
 
     const handleCloseOrder = (id: string) => {
@@ -82,7 +90,7 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
         );
     };
     return (
-        <div className="relative w-full max-h-[300px] overflow-y-scroll overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="relative w-full max-h-[300px] overflow-scroll rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
             <table className="min-w-full text-sm md:text-base">
                 <thead className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
                     <tr>

@@ -22,7 +22,6 @@ const AssetCard = ({ icon, name, symbol, price, prevPrice, changeDir }: AssetCar
 
   const handleClick = () => {
     navigate("/chart/" + symbol)
-    console.log(`Navigate to /chart/${symbol}`);
   };
 
   return (

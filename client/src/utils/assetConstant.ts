@@ -361,6 +361,8 @@ export const dummyOrders = [
     quantity: 0.02,
     remainingQuantity: 0.02,
     margin: "isolated",
+    sl:10,
+    tg:100,
     status: "PENDING",
     orderSide: "BUY",
     createdAt: "2025-11-01T10:12:00Z",
@@ -423,3 +425,5 @@ export const dummyOrders = [
     updateAt: "2025-11-01T09:46:00Z",
   },
 ];
+
+

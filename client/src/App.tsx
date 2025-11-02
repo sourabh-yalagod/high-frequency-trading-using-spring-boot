@@ -5,6 +5,8 @@ import Signin from './pages/auth/Signin'
 import ForgotPassword from './pages/auth/FormgotPassword'
 import PrivateRoute from './pages/auth/PrivateRoute'
 import Dashboard from './pages/dashboard/Dashboard'
+import UserProfile from './pages/UserProfile'
+import About from './pages/About'
 
 function App() {
   return (
@@ -12,10 +14,12 @@ function App() {
       <Routes>
         <Route path='/signup' element={<Signup />} />
         <Route path='/signin' element={<Signin />} />
+        <Route path='/about' element={<About />} />
         <Route path='/forgot-password' element={<ForgotPassword />} />
-        <Route path='/chart/:symbol' element={<Chart />} />
+        <Route path="/" element={<Dashboard />} />
         <Route element={<PrivateRoute />}>
-          <Route path="/" element={<Dashboard />} />
+          <Route path='/chart/:symbol' element={<Chart />} />
+          <Route path='/profile/:userId' element={<UserProfile />} />
         </Route>
       </Routes>
     </BrowserRouter >

@@ -2,15 +2,18 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
-import { toast } from "sonner";
+import { registerUser } from "../../store/apis";
+import { useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 const Signup = () => {
+  const params = useSearchParams()[0];
   const initialValues = {
     username: "",
     email: "",
     password: "",
   };
-
+  const navigate = useNavigate()
   const validationSchema = Yup.object({
     username: Yup.string()
       .min(3, "Username must be at least 3 characters")
@@ -23,17 +26,28 @@ const Signup = () => {
       .required("Password is required"),
   });
 
-  const handleSubmit = (values: typeof initialValues, { resetForm }: any) => {
-    console.log("Signup form submitted:", values);
+  const handleSubmit = async (values: typeof initialValues, { resetForm }: any) => {
+    try {
+      const response = await registerUser(values);
+      console.log(response.data);
+    } catch (error: any) {
+      console.log(error?.message || error);
+
+    }
     resetForm();
   };
 
   const handleSSOLogin = (provider: string) => {
     console.log(`Signing up with ${provider}`);
     const backendURL = import.meta.env.VITE_BACKEND_URL;
-    window.location.href = `${backendURL}/auth/${provider}`;
+    window.location.href = `${backendURL}/oauth2/authorization/${provider}`;
   };
-
+  useEffect(() => {
+    if (params.get("status") == "success") {
+      localStorage.setItem("token", JSON.stringify(params.get("token")))
+      navigate("/")
+    }
+  }, [params])
   return (
     <div className="flex justify-center items-center min-h-screen bg-linear-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 px-4">
       <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 transition duration-300">
@@ -158,12 +172,12 @@ const Signup = () => {
 
               <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
                 Already have an account?{" "}
-                <a
-                  href="/signin"
+                <Link
+                  to="/signin"
                   className="text-indigo-600 hover:underline dark:text-indigo-400"
                 >
                   Sign in
-                </a>
+                </Link>
               </p>
             </Form>
           )}

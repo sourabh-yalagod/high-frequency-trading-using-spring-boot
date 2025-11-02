@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { TrendingUp, TrendingDown, DollarSign, Layers, AlertCircle } from "lucide-react";
 import { useParams } from "react-router-dom";
-import { order } from "../../utils/assetConstant";
+import { order } from "../../../utils/assetConstant";
 
 interface OrderPanelProps {
   userId: string;
@@ -26,7 +26,6 @@ const OrderPanel: React.FC<OrderPanelProps> = ({
   marketPrice,
   placeOrder
 }) => {
-  console.log(marketPrice);
   
   const [orderType, setOrderType] = useState(order.type.limit);
   const [orderSide, setOrderSide] = useState(order.side.buy);
@@ -48,17 +47,15 @@ const OrderPanel: React.FC<OrderPanelProps> = ({
 
   const handleSubmit = useCallback(() => {
     if (!quantity || parseFloat(quantity) <= 0) return;
-
     setIsSubmitting(true);
-
     const payload: OrderPayload = {
       asset: symbol?.toUpperCase() || "",
       userId,
       orderType,
-      price: orderType === order.type.market ? null : parseFloat(price),
+      price: orderType === order.type.market ? marketPrice : parseFloat(price),
       quantity: parseFloat(quantity),
-      margin: leverage,
-      status: order.status.pending,
+      margin: Number(requiredMargin?.toFixed(2)),
+      status: order?.status?.pending,
       orderSide,
     };
 

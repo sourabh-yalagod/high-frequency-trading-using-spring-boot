@@ -2,8 +2,14 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
+import { loginUser } from "../../store/apis";
+import { userToastMessages } from "../../utils/userToastMessages";
+import { useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 const Signin = () => {
+  const params = useSearchParams()[0];
+  const navigate = useNavigate()
   const initialValues = {
     email: "",
     password: "",
@@ -16,15 +22,26 @@ const Signin = () => {
     password: Yup.string().required("Password is required"),
   });
 
-  const handleSubmit = (values: typeof initialValues, { resetForm }: any) => {
-    console.log("Signin form submitted:", values);
-    // Example: await axios.post('/api/auth/signin', values);
+  const handleSubmit = async (values: typeof initialValues, { resetForm }: any) => {
+    try {
+      const response = await loginUser(values);
+      localStorage.setItem("token", response.data.accessToken)
+      navigate("/")
+    } catch (error: any) {
+      const errorMessage = error.response.data.message || error.response.data.error
+      errorMessage && userToastMessages("error", errorMessage);
+    }
     resetForm();
   };
-
+  useEffect(() => {
+    if (params.get("status") == "success") {
+      localStorage.setItem("token", JSON.stringify(params.get("token")))
+      navigate("/")
+    }
+  }, [params])
   const handleSSOLogin = (provider: string) => {
     const backendURL = import.meta.env.VITE_BACKEND_URL;
-    window.location.href = `${backendURL}/auth/${provider}`;
+    window.location.href = `${backendURL}/oauth2/authorization/${provider}`;
   };
 
   return (
@@ -139,12 +156,12 @@ const Signin = () => {
 
               <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
                 Don’t have an account?{" "}
-                <a
-                  href="/signup"
+                <Link
+                  to="/signup"
                   className="text-indigo-600 hover:underline dark:text-indigo-400"
                 >
                   Sign up
-                </a>
+                </Link>
               </p>
             </Form>
           )}
