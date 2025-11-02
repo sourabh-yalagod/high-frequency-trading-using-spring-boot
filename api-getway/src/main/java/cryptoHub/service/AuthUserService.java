@@ -37,10 +37,13 @@ public class AuthUserService implements UserDetailsService {
     }
 
     public UserEntity registerUser(UserEntity userPayload) throws Exception {
-        System.out.println("INSIDE REGI : " + userPayload);
         if (userPayload.getPassword() != null) {
             userPayload.setPassword(passwordEncoder.encode(userPayload.getPassword()));
         }
         return userRepository.save(userPayload);
+    }
+
+    public UserEntity findUserByEmail(String email) {
+        return userRepository.findUserByEmail(email);
     }
 }

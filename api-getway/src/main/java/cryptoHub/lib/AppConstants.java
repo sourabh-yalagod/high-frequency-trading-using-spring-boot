@@ -8,6 +8,7 @@ public class AppConstants {
     public static final List<String> PUBLIC_ROUTES = List.of(
             "/api/auth",
             "/api/public",
-            "/login"
+            "/login",
+            "/stripe/webhook"
     );
 }

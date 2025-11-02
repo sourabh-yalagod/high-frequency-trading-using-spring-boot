@@ -1,5 +1,6 @@
 package cryptoHub.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import cryptoHub.types.RolesEnum;
@@ -8,6 +9,7 @@ import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -17,7 +19,6 @@ import java.util.List;
 @Table(name = "users")
 @Getter
 @Setter
-@ToString
 @Builder
 public class UserEntity implements UserDetails {
     @Id
@@ -26,9 +27,13 @@ public class UserEntity implements UserDetails {
 
     private String username;
 
+    @Column(nullable = false)
     private String email;
 
+    @Column(name = "refresh_token", columnDefinition = "TEXT")
     private String refreshToken;
+
+    private Double amount;
 
     @JsonProperty(access = JsonProperty.Access.READ_WRITE)
     private String password;
@@ -44,4 +49,8 @@ public class UserEntity implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
     }
+
+    @OneToMany(mappedBy = "user")
+    @JsonIgnore
+    private List<PaymentEntity> payments = new ArrayList<>();
 }
