@@ -79,6 +79,7 @@ public class OrderService {
         for (OrderRequestDto sellOrder : sellOrders) {
             if (remainingQty <= 0) break;
             if (order.getPrice() >= sellOrder.getPrice()) {
+                sellOrder.setCreatedAt(LocalDateTime.now().toString());
                 if (sellOrder.getRemainingQuantity() <= remainingQty) {
                     // Fully consume this sell order
                     remainingQty -= sellOrder.getRemainingQuantity();
@@ -90,11 +91,8 @@ public class OrderService {
                     // Partially fill sell order
                     double leftover = sellOrder.getRemainingQuantity() - remainingQty;
                     sellOrder.setRemainingQuantity(leftover);
-                    remainingQty = 0;
-                    order.setRemainingQuantity(remainingQty);
-                    sellOrder.setCreatedAt(LocalDateTime.now().toString());
                     transactions.add(sellOrder);
-                    transactions.getFirst().setRemainingQuantity(remainingQty);
+                    System.out.println("FIRST : " + transactions.getFirst().toString());
                     orderUtils.webHookResponse(sellOrder.getCallUrl(), orderUtils.customWebSocketResponse(sellOrder, "Order partially filled. Please wait for further " + sellOrder.getRemainingQuantity() + " to get filled.", true, OrderStatus.PENDING));
                     break;
                 }
@@ -104,14 +102,13 @@ public class OrderService {
             filledOrder.setStatus(OrderStatus.OPEN);
             orderUtils.webHookResponse(filledOrder.getCallUrl(), orderUtils.customWebSocketResponse(filledOrder, "Order filled", false, OrderStatus.OPEN));
         });
-        if (order.getRemainingQuantity() == 0) {
-            order.setStatus(OrderStatus.OPEN);
-        }
+        transactions.getFirst().setRemainingQuantity(0.0);
+        transactions.getFirst().setStatus(OrderStatus.OPEN);
+        transactions.getFirst().setCreatedAt(LocalDateTime.now().toString());
         orderUtils.webHookResponse(order.getCallUrl(), orderUtils.customWebSocketResponse(order, "Buy order executed successfully", false, OrderStatus.OPEN));
         // Remove fully matched orders and update cache
         sellOrders.removeAll(toRemove);
         orderUtils.cacheData(BTC_SELL_ORDER_KEY, sellOrders);
-
         // Notify or process transactions
         return transactions;
     }
@@ -155,6 +152,7 @@ public class OrderService {
         for (OrderRequestDto buyOrder : buyOrders) {
             if (remainingQty <= 0) break;
             if (buyOrder.getPrice() >= order.getPrice()) {
+                buyOrder.setCreatedAt(LocalDateTime.now().toString());
                 if (buyOrder.getRemainingQuantity() <= remainingQty) {
                     // Fully consume this buy order
                     remainingQty -= buyOrder.getRemainingQuantity();
@@ -166,9 +164,6 @@ public class OrderService {
                     // Partially fill buy order
                     double leftover = buyOrder.getRemainingQuantity() - remainingQty;
                     buyOrder.setRemainingQuantity(leftover);
-                    buyOrder.setCreatedAt(LocalDateTime.now().toString());
-                    remainingQty = 0;
-                    transactions.getFirst().setRemainingQuantity(remainingQty);
                     transactions.add(buyOrder);
                     orderUtils.webHookResponse(buyOrder.getCallUrl(), orderUtils.customWebSocketResponse(buyOrder, "Order partially filled. Please wait for further " + buyOrder.getRemainingQuantity() + " to get filled.", true, OrderStatus.PENDING));
                     break;
@@ -182,6 +177,9 @@ public class OrderService {
             orderUtils.webHookResponse(filledOrder.getCallUrl(), orderUtils.customWebSocketResponse(filledOrder, "Order filled", false, OrderStatus.OPEN));
         });
 
+        transactions.getFirst().setRemainingQuantity(0.0);
+        transactions.getFirst().setStatus(OrderStatus.OPEN);
+        transactions.getFirst().setCreatedAt(LocalDateTime.now().toString());
         // Notify current sell order
         if (order.getRemainingQuantity() == 0) {
             order.setStatus(OrderStatus.OPEN);
