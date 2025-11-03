@@ -35,8 +35,10 @@ const Signin = () => {
   };
   useEffect(() => {
     if (params.get("status") == "success") {
-      localStorage.setItem("token", JSON.stringify(params.get("token")))
+      if (params.get("status") == "success") {
+      localStorage.setItem("token", params.get("token") || "")
       navigate("/")
+    }
     }
   }, [params])
   const handleSSOLogin = (provider: string) => {

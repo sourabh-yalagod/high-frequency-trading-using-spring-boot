@@ -22,10 +22,9 @@ const Header = ({ connected }: HeaderProps) => {
         <Logo />
         <nav className="flex items-center gap-4">
           <div className="hidden md:flex gap-6 text-sm font-medium">
-            <Link to="/dashboard" className="hover:text-blue-500">Dashboard</Link>
             <Link to="/chart/BTCUSDT" className="hover:text-blue-500">Charts</Link>
             <Link to={"/profile/" + getUserId()} className="hover:text-blue-500">Profile</Link>
-            <Link to="/settings" className="hover:text-blue-500">Settings</Link>
+            <Link to={"/settings/" + getUserId()} className="hover:text-blue-500">Settings</Link>
             {
               !isAuthenticated &&
               <Link to="/signup" className="hover:text-blue-500">SignUp</Link>

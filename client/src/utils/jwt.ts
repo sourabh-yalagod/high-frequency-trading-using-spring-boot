@@ -20,7 +20,6 @@ export function getUserId(): DecodedToken | null {
         if (parts.length !== 3) return null;
 
         const decoded: DecodedToken = jwtDecode(token);
-        console.log(decoded);
         
         if (!decoded.exp) return null;
 
@@ -29,11 +28,9 @@ export function getUserId(): DecodedToken | null {
             localStorage.removeItem("token");
             return null;
         }
-        console.log("Decoeded : " + decoded);
 
         return decoded?.userId || decoded?.id || decoded?._id || null;;
     } catch (err) {
-        console.error("Invalid token:", err);
         localStorage.removeItem("token");
         return null;
     }

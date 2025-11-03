@@ -41,6 +41,8 @@ const UserProfile = () => {
                 setLoading(true);
                 const response = await getUserDetails(userId || "");
                 setUserData(response.data);
+                console.log(response.data);
+                
                 setError(null);
             } catch (err) {
                 setError('Failed to load user data');

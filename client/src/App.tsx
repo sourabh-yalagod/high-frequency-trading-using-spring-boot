@@ -7,6 +7,7 @@ import PrivateRoute from './pages/auth/PrivateRoute'
 import Dashboard from './pages/dashboard/Dashboard'
 import UserProfile from './pages/UserProfile'
 import About from './pages/About'
+import Settings from './pages/Settings'
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route element={<PrivateRoute />}>
           <Route path='/chart/:symbol' element={<Chart />} />
           <Route path='/profile/:userId' element={<UserProfile />} />
+          <Route path='/settings/:userId' element={<Settings />} />
         </Route>
       </Routes>
     </BrowserRouter >

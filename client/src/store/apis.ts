@@ -10,6 +10,14 @@ const loginUser = async (payload: any) => {
 }
 
 const getUserDetails = async (userId: string) => {
-    return await axiosInstance.get("/" + userId)
+    return await axiosInstance.get("/user/" + userId)
 }
-export { registerUser, loginUser, getUserDetails };
+
+const requestVerifyAccount = async (userId: string) => {
+    return await axiosInstance.get("/user/request-verification-otp/" + userId)
+}
+
+const verifyAccount = async (userId: string, otp: string) => {
+    return await axiosInstance.post("/user/verify-account/" + userId, { otp })
+}
+export { registerUser, loginUser, getUserDetails, requestVerifyAccount, verifyAccount };

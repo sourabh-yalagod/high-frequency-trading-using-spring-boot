@@ -44,8 +44,10 @@ const Signup = () => {
   };
   useEffect(() => {
     if (params.get("status") == "success") {
-      localStorage.setItem("token", JSON.stringify(params.get("token")))
-      navigate("/")
+      if (params.get("status") == "success") {
+        localStorage.setItem("token", params.get("token") || "")
+        navigate("/")
+      }
     }
   }, [params])
   return (
