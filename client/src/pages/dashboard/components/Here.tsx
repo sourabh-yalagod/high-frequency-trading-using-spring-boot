@@ -1,6 +1,17 @@
 import { Download, Eye, EyeOff } from "lucide-react";
+import { getUserId } from "../../../utils/jwt";
+import { useNavigate } from "react-router-dom";
 
 const Hero = ({ balance, showBalance, setShowBalance }: any) => {
+    const userId = getUserId();
+    const navigate = useNavigate()
+    const handleDirectToDepositePage = () => {
+        if (!!userId) {
+            navigate("/deposite/" + userId)
+        } else {
+            navigate("/signin")
+        }
+    }
     return (
         <div className="w-full max-w-3/4 space-y-6">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white">
@@ -23,7 +34,9 @@ const Hero = ({ balance, showBalance, setShowBalance }: any) => {
                 </div>
 
                 <div className="flex flex-wrap gap-3 pt-2">
-                    <button className="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold rounded-lg transition flex items-center space-x-2">
+                    <button
+                        onClick={handleDirectToDepositePage}
+                        className="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold rounded-lg transition flex items-center space-x-2">
                         <Download size={18} />
                         <span>Deposit</span>
                     </button>

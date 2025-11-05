@@ -21,7 +21,10 @@ const Chart = () => {
                 </div>
                 <div className='md:flex gap-3 h-full space-y-6 space-x-2'>
                     <OrderBook bids={dummyBids} asks={dummyAsks} />
-                    <OrderPanel marketPrice={Number(price)} placeOrder={() => { }} userId="" />
+                    <OrderPanel orderData={dummyOrders} marketPrice={Number(price)} placeOrder={(order: any) => {
+                        console.log("Placed Order : ", order);
+
+                    }} userId="" />
                 </div>
             </div>
             <div className='mt-5 sm:mt-0 p-4'>

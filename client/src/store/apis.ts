@@ -20,4 +20,8 @@ const requestVerifyAccount = async (userId: string) => {
 const verifyAccount = async (userId: string, otp: string) => {
     return await axiosInstance.post("/user/verify-account/" + userId, { otp })
 }
-export { registerUser, loginUser, getUserDetails, requestVerifyAccount, verifyAccount };
+
+const depositeMoney = async (payload: any) => {
+    return await axiosInstance.post("/deposit/create-session", payload)
+}
+export { registerUser, loginUser, getUserDetails, requestVerifyAccount, verifyAccount, depositeMoney };

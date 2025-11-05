@@ -2,12 +2,15 @@ import { useMemo, useState, useCallback } from "react";
 import { TrendingUp, TrendingDown, DollarSign, Layers, AlertCircle } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { order } from "../../../utils/assetConstant";
+import { getUserId } from "../../../utils/jwt";
+import axios from "axios";
 
 interface OrderPanelProps {
   userId: string;
   marketPrice: number;
   symbol?: string;
   placeOrder?: (payload: OrderPayload) => void;
+  orderData: any
 }
 
 interface OrderPayload {
@@ -24,9 +27,10 @@ interface OrderPayload {
 const OrderPanel: React.FC<OrderPanelProps> = ({
   userId,
   marketPrice,
-  placeOrder
-}) => {
-  
+  placeOrder,
+  orderData
+}: any) => {
+
   const [orderType, setOrderType] = useState(order.type.limit);
   const [orderSide, setOrderSide] = useState(order.side.buy);
   const [price, setPrice] = useState<string>(marketPrice.toString());
@@ -59,9 +63,17 @@ const OrderPanel: React.FC<OrderPanelProps> = ({
       orderSide,
     };
 
-    console.log("📦 Order Payload:", payload);
     placeOrder?.(payload);
-
+    // if (!getUserId()) return;
+    const webHookUrl = import.meta.env.VITE_BACKEND_URL + `/order/webhook/subscribe/${getUserId()}`
+    axios.get(webHookUrl).then((res) => {
+      orderData.push(res.data)
+    }).catch(error => {
+      console.log(error);
+    })
+    orderData.push(payload)
+    console.log(orderData);
+    
     setTimeout(() => {
       setIsSubmitting(false);
       setQuantity("");
@@ -94,8 +106,8 @@ const OrderPanel: React.FC<OrderPanelProps> = ({
               key={type}
               onClick={() => setOrderType(type)}
               className={`py-1.5 text-xs font-semibold rounded transition-all ${orderType === type
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
                 }`}
             >
               {type}
@@ -107,8 +119,8 @@ const OrderPanel: React.FC<OrderPanelProps> = ({
           <button
             onClick={() => setOrderSide(order.side.buy)}
             className={`py-1.5 text-xs font-semibold rounded transition-all ${orderSide === order.side.buy
-                ? "bg-green-500 text-white"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+              ? "bg-green-500 text-white"
+              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
               }`}
           >
             <TrendingUp className="inline w-3 h-3 mr-1" />
@@ -117,8 +129,8 @@ const OrderPanel: React.FC<OrderPanelProps> = ({
           <button
             onClick={() => setOrderSide(order.side.sell)}
             className={`py-1.5 text-xs font-semibold rounded transition-all ${orderSide === order.side.sell
-                ? "bg-red-500 text-white"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+              ? "bg-red-500 text-white"
+              : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
               }`}
           >
             <TrendingDown className="inline w-3 h-3 mr-1" />
@@ -209,8 +221,8 @@ const OrderPanel: React.FC<OrderPanelProps> = ({
             onClick={handleSubmit}
             disabled={isSubmitting || !quantity || parseFloat(quantity) <= 0}
             className={`flex-1 py-2 text-xs rounded font-semibold text-white transition-all ${orderSide === order.side.buy
-                ? "bg-green-600 hover:bg-green-700"
-                : "bg-red-600 hover:bg-red-700"
+              ? "bg-green-600 hover:bg-green-700"
+              : "bg-red-600 hover:bg-red-700"
               } ${isSubmitting || !quantity ? "opacity-60 cursor-not-allowed" : ""}`}
           >
             {isSubmitting ? "Placing..." : `${orderSide} ${orderType}`}

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { userToastMessages } from "../../../utils/userToastMessages";
 import { usePriceContext } from "../../../context/PriceContext";
-import axios from "axios";
 interface Order {
     id: string;
     userId: string;
@@ -12,6 +11,8 @@ interface Order {
     margin: string;
     status: string;
     orderSide: string;
+    sl: number | any;
+    tg: number | any;
     createdAt: string;
     updateAt: string;
 }
@@ -23,9 +24,18 @@ interface OrdersProps {
 const Orders: React.FC<OrdersProps> = ({ orders }) => {
     const { getPrice } = usePriceContext();
 
-    const [orderData, setOrderData] = useState(
-        orders.map((o: any) => ({ ...o, sl: o?.sl || "", tg: o.tg || "" }))
-    );
+    const [orderData, setOrderData] = useState<Order[]>([]);
+
+    useEffect(() => {
+        if (Array.isArray(orders)) {
+            setOrderData(() => orders?.map((o) => ({
+                ...o,
+                sl: o?.sl ?? "",
+                tg: o?.tg ?? "",
+            }))
+            );
+        }
+    }, [orders?.length]);
     const [activeModal, setActiveModal] = useState<{
         id: string;
         field: "sl" | "tg" | null;
@@ -46,22 +56,15 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
                 return "text-gray-600 dark:text-gray-300";
         }
     };
-    useEffect(() => {
-        const webHookUrl = import.meta.env.VITE_BACKEND_URL + "/webhook"
-        axios.post(webHookUrl).then((res) => {
-            orderData.push(res.data)
-        }).catch(error => {
-            console.log(error);
-        })
-    }, [])
+
     const getPositionStatus = (order: Order) => {
-        const current = Number(getPrice(order.asset.toUpperCase()));
+        const current = Number(getPrice(order?.asset?.toUpperCase()));
 
         if (!current) return { color: "text-gray-400", pnl: 0 };
 
-        const isBuy = order.orderSide === "BUY";
-        const diff = current - order.price;
-        const pnl = isBuy ? diff * order.quantity : -diff * order.quantity;
+        const isBuy = order?.orderSide === "BUY";
+        const diff = current - order?.price;
+        const pnl = isBuy ? diff * order?.quantity : -diff * order?.quantity;
 
         return {
             color: pnl > 0 ? "text-green-500" : pnl < 0 ? "text-red-500" : "text-blue-500",
@@ -78,7 +81,7 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
         const { id, field } = activeModal;
         if (!field) return;
         setOrderData((prev) =>
-            prev.map((o) => (o.id === id ? { ...o, [field]: inputValue } : o))
+            prev?.map((o) => (o.id === id ? { ...o, [field]: inputValue } : o))
         );
         setActiveModal({ id: "", field: null });
         console.log(orderData);
@@ -86,9 +89,10 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
 
     const handleCloseOrder = (id: string) => {
         setOrderData((prev) =>
-            prev.map((o) => (o.id === id ? { ...o, status: "CLOSED" } : o))
+            prev?.map((o) => (o.id === id ? { ...o, status: "CLOSED" } : o))
         );
     };
+
     return (
         <div className="relative w-full max-h-[300px] overflow-scroll rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
             <table className="min-w-full text-sm md:text-base">
@@ -116,37 +120,37 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
                 </thead>
 
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {orderData.map((order) => {
+                    {orderData?.map((order: any) => {
                         const isPendingOrOpenOrder = order?.status?.toUpperCase() == "PENDING" || order?.status?.toUpperCase() == "OPEN"
 
                         const { color, pnl } = getPositionStatus(order);
-                        const current = Number(getPrice(order.asset.toUpperCase()));
+                        const current = Number(getPrice(order?.asset?.toUpperCase()));
 
                         return (
                             <tr
-                                key={order.id}
+                                key={order?.id}
                                 className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
                             >
                                 <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
-                                    {order.asset}
+                                    {order?.asset}
                                 </td>
-                                <td className="px-4 py-3">{order.price.toLocaleString()}</td>
+                                <td className="px-4 py-3">{order?.price?.toLocaleString()}</td>
                                 <td className="px-4 py-3">
                                     {typeof current === "number" ? current.toLocaleString() : "-"}
                                 </td>
-                                <td className="px-4 py-3">{order.quantity}</td>
+                                <td className="px-4 py-3">{order?.quantity}</td>
 
                                 {/* SL */}
                                 <td className="px-4 py-3">
-                                    {order.sl ? (
+                                    {order?.sl ? (
                                         <div className="flex items-center gap-2">
-                                            <span className="text-gray-300">{order.sl}</span>
+                                            <span className="text-gray-300">{order?.sl}</span>
                                             <button
                                                 className="text-red-500 hover:text-red-600 text-xs"
                                                 onClick={() =>
-                                                    setOrderData((prev) =>
-                                                        prev.map((o) =>
-                                                            o.id === order.id ? { ...o, sl: "" } : o
+                                                    setOrderData((prev: any) =>
+                                                        prev.map((o: any) =>
+                                                            o.id === order?.id ? { ...o, sl: "" } : o
                                                         )
                                                     )
                                                 }
@@ -161,7 +165,7 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
                                                     userToastMessages("warning", "Order should be OPEN of Pending...!")
                                                     return
                                                 } else {
-                                                    handleOpenModal(order.id, "sl")
+                                                    handleOpenModal(order?.id, "sl")
                                                 }
                                             }}
                                             className="text-blue-500 text-xs hover:underline"
@@ -173,15 +177,15 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
 
                                 {/* TG */}
                                 <td className="px-4 py-3">
-                                    {order.tg ? (
+                                    {order?.tg ? (
                                         <div className="flex items-center gap-2">
-                                            <span className="text-gray-300">{order.tg}</span>
+                                            <span className="text-gray-300">{order?.tg}</span>
                                             <button
                                                 className="text-red-500 hover:text-red-600 text-xs"
                                                 onClick={() =>
-                                                    setOrderData((prev) =>
-                                                        prev.map((o) =>
-                                                            o.id === order.id ? { ...o, tg: "" } : o
+                                                    setOrderData((prev: any) =>
+                                                        prev.map((o: any) =>
+                                                            o.id === order?.id ? { ...o, tg: "" } : o
                                                         )
                                                     )
                                                 }
@@ -196,7 +200,7 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
                                                     userToastMessages("warning", "Order should be OPEN of Pending...!")
                                                     return
                                                 } else {
-                                                    handleOpenModal(order.id, "tg")
+                                                    handleOpenModal(order?.id, "tg")
                                                 }
                                             }}
                                             className="text-green-500 text-xs hover:underline"
@@ -206,8 +210,8 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
                                     )}
                                 </td>
 
-                                <td className={`px-4 py-3 font-medium ${getStatusColor(order.status)}`}>
-                                    {order.status}
+                                <td className={`px-4 py-3 font-medium ${getStatusColor(order?.status)}`}>
+                                    {order?.status}
                                 </td>
 
                                 <td className={`px-4 py-3 font-semibold ${color}`}>
@@ -215,9 +219,9 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
                                 </td>
 
                                 <td className="px-4 py-3">
-                                    {order.status === "OPEN" || order.status === "PENDING" ? (
+                                    {order?.status === "OPEN" || order?.status === "PENDING" ? (
                                         <button
-                                            onClick={() => handleCloseOrder(order.id)}
+                                            onClick={() => handleCloseOrder(order?.id)}
                                             className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-md transition"
                                         >
                                             Close

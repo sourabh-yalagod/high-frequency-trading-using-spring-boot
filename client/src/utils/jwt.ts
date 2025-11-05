@@ -20,7 +20,8 @@ export function getUserId(): DecodedToken | null {
         if (parts.length !== 3) return null;
 
         const decoded: DecodedToken = jwtDecode(token);
-        
+        console.log("Decoded Token : ", decoded);
+
         if (!decoded.exp) return null;
 
         const currentTime = Math.floor(Date.now() / 1000);

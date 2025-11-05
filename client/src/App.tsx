@@ -8,6 +8,7 @@ import Dashboard from './pages/dashboard/Dashboard'
 import UserProfile from './pages/UserProfile'
 import About from './pages/About'
 import Settings from './pages/Settings'
+import Deposite from './pages/Deposite'
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route element={<PrivateRoute />}>
           <Route path='/chart/:symbol' element={<Chart />} />
+          <Route path='/deposite/:userId' element={<Deposite />} />
           <Route path='/profile/:userId' element={<UserProfile />} />
           <Route path='/settings/:userId' element={<Settings />} />
         </Route>
