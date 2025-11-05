@@ -35,7 +35,7 @@ public class WebsocketResponse {
                 ));
 
         List<OrderDto> result = aggregated.entrySet().stream()
-                .map(entry -> new OrderDto(entry.getKey(), entry.getValue(), Assets.BTC))
+                .map(entry -> new OrderDto(entry.getKey(), entry.getValue(), orders.getFirst().getAsset()))
                 .collect(Collectors.toList());
 
         if (isBuyers) {

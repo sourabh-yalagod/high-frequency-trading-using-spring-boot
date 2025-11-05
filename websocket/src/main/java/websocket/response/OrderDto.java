@@ -16,5 +16,5 @@ import websocket.types.OrderSide;
 public class OrderDto {
     private double price;
     private double quantity;
-    private Assets asset;
+    private String asset;
 }
