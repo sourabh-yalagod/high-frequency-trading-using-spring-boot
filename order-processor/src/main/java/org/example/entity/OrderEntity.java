@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.types.Assets;
 import org.example.types.OrderSide;
 import org.example.types.OrderStatus;
 import org.example.types.OrderType;
@@ -23,8 +22,7 @@ public class OrderEntity {
     @Id
     private String id;
     private String userId;
-    @Enumerated(value = EnumType.STRING)
-    private Assets asset;
+    private String asset;
     @Enumerated(value = EnumType.STRING)
     private OrderType orderType;
     private Double price;
