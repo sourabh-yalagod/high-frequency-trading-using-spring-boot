@@ -24,8 +24,7 @@ public class OrderEntity {
     @Id
     private String id;
     private String userId;
-    @Enumerated(value = EnumType.STRING)
-    private Assets asset;
+    private String asset;
     @Enumerated(value = EnumType.STRING)
     private OrderType orderType;
     private Double price;
