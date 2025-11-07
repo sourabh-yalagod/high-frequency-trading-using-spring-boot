@@ -22,6 +22,7 @@ interface OrderPayload {
   margin: number;
   status: string;
   orderSide: string;
+  callUrl: string
 }
 
 const OrderPanel: React.FC<OrderPanelProps> = ({
@@ -61,6 +62,7 @@ const OrderPanel: React.FC<OrderPanelProps> = ({
       margin: Number(requiredMargin?.toFixed(2)),
       status: order?.status?.pending,
       orderSide,
+      callUrl: window.location.origin.concat(`/order/webhook/` + getUserId() || userId)
     };
 
     placeOrder?.(payload);
@@ -73,7 +75,7 @@ const OrderPanel: React.FC<OrderPanelProps> = ({
     })
     orderData.push(payload)
     console.log(orderData);
-    
+
     setTimeout(() => {
       setIsSubmitting(false);
       setQuantity("");

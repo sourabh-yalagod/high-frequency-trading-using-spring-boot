@@ -96,7 +96,7 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
     return (
         <div className="relative w-full max-h-[300px] overflow-scroll rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
             <table className="min-w-full text-sm md:text-base">
-                <thead className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                <thead className=" text-gray-700 dark:text-gray-300">
                     <tr>
                         {[
                             "Asset",

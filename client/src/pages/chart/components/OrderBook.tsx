@@ -1,13 +1,10 @@
 import React from "react";
+import type { OrderDto } from "../Chart";
 
-type Order = {
-    price: number;
-    quantity: number;
-};
 
 interface OrderBookProps {
-    bids: Order[];
-    asks: Order[];
+    bids: OrderDto[];
+    asks: OrderDto[];
 }
 
 const OrderBook: React.FC<OrderBookProps> = ({ bids, asks }) => {

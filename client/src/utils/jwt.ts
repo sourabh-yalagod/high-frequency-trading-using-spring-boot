@@ -11,7 +11,7 @@ interface DecodedToken {
  * Verifies if the stored JWT token is valid and not expired.
  * Returns the decoded payload if valid, otherwise null.
  */
-export function getUserId(): DecodedToken | null {
+export function getUserId(): string | null {
     try {
         const token = localStorage.getItem("token");
         if (!token || typeof token !== "string") return null;
@@ -20,7 +20,6 @@ export function getUserId(): DecodedToken | null {
         if (parts.length !== 3) return null;
 
         const decoded: DecodedToken = jwtDecode(token);
-        console.log("Decoded Token : ", decoded);
 
         if (!decoded.exp) return null;
 
