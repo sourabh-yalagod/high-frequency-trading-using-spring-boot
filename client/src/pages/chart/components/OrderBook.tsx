@@ -27,14 +27,14 @@ const OrderBook: React.FC<OrderBookProps> = ({ bids, asks }) => {
                             <span className="text-green-400 font-semibold">
                                 {bid.price.toFixed(2)}
                             </span>
-                            <span className="text-gray-400">{bid.quantity}</span>
+                            <span className="text-gray-400">{bid?.remainingQuantity || bid?.quantity}</span>
                         </div>
                     ))}
                 </div>
             </div>
-            <div className="h-3 w-full"/>
+            <div className="h-3 w-full" />
             <hr />
-            <div className="h-3 w-full"/>
+            <div className="h-3 w-full" />
             {/* ASKS (Top Half) */}
             <div className="flex-1 border-b border-gray-700 overflow-y-auto pb-2">
                 <div className="space-y-1 text-[13px]">
@@ -46,8 +46,9 @@ const OrderBook: React.FC<OrderBookProps> = ({ bids, asks }) => {
                             <span className="text-red-400 font-semibold">
                                 {ask.price.toFixed(2)}
                             </span>
-                            <span className="text-gray-400">{ask.quantity}</span>
+                            <span className="text-gray-400">{ask?.remainingQuantity || ask?.quantity}</span>
                         </div>
+
                     ))}
                 </div>
             </div>

@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { getUserDetails, requestVerifyAccount, verifyAccount } from "../store/apis";
+import { getUserDetails, requestVerifyAccount, updateUsername, verifyAccount } from "../store/apis";
 import { useParams } from "react-router-dom";
-import axiosInstance from "../lib/axiosInstance";
 import { AlertCircle, CheckCircle, Loader2, Mail, Shield, User } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import useUpdateTanstackCache from "../hooks/useUpdateTanstackCache";
 
 export default function Settings() {
     const userId = useParams()?.userId || "";
-
+    const { invalidateCache } = useUpdateTanstackCache()
     const [userDetails, setUserDetails] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
     const [username, setUsername] = useState('');
     const [otp, setOtp] = useState('');
     const [showOtpInput, setShowOtpInput] = useState(false);
@@ -17,27 +17,24 @@ export default function Settings() {
     const [verifying, setVerifying] = useState(false);
 
     const [message, setMessage] = useState({ type: '', text: '' });
-
+    const { data, isFetching, isSuccess, isError, error } = useQuery({
+        queryKey: ['user', userId],
+        queryFn: () => getUserDetails(userId),
+        enabled: !!userId, // only fetch if userId exists
+    });
     useEffect(() => {
-        fetchUserDetails();
-    }, []);
-
-    const fetchUserDetails = async () => {
-        try {
-            setLoading(true);
-            const response = await getUserDetails(userId);
-            setUserDetails(response.data);
-            setUsername(response.data.username);
+        if (!isFetching && isSuccess) {
+            setUserDetails(data?.data);
+            setUsername(data?.data.username);
             setMessage({ type: '', text: '' });
-        } catch (error:any) {
+        }
+        if (!isFetching && isError) {
             setMessage({
                 type: 'error',
-                text: error.response?.data?.message || 'Failed to load user details'
+                text: error?.cause?.toString() || 'Failed to load user details'
             });
-        } finally {
-            setLoading(false);
         }
-    };
+    }, [isFetching]);
 
     const handleRequestOtp = async () => {
         try {
@@ -49,7 +46,7 @@ export default function Settings() {
                 text: response.data.message || 'OTP sent to your email'
             });
             setShowOtpInput(true);
-        } catch (error:any) {
+        } catch (error: any) {
             setMessage({
                 type: 'error',
                 text: error.response?.data?.message || 'Failed to send OTP'
@@ -76,7 +73,7 @@ export default function Settings() {
             setTimeout(() => {
                 window.location.href = '/';
             }, 1500);
-        } catch (error:any) {
+        } catch (error: any) {
             setMessage({
                 type: 'error',
                 text: error.response?.data?.message || 'Verification failed. Please check your OTP'
@@ -95,10 +92,10 @@ export default function Settings() {
         try {
             setUpdating(true);
             setMessage({ type: '', text: '' });
-            await axiosInstance.put(`/user/${userId}/username`, { username });
+            await updateUsername(username);
+            invalidateCache('user');
             setMessage({ type: 'success', text: 'Username updated successfully' });
-            await fetchUserDetails();
-        } catch (error:any) {
+        } catch (error: any) {
             setMessage({
                 type: 'error',
                 text: error.response?.data?.message || 'Failed to update username'
@@ -108,7 +105,7 @@ export default function Settings() {
         }
     };
 
-    if (loading) {
+    if (isFetching) {
         return (
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
                 <div className="text-center">

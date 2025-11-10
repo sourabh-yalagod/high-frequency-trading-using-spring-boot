@@ -1,19 +1,19 @@
 import ChartForSymbol from './components/ChartForSymbol'
 import { useParams } from 'react-router-dom'
 import OrderBook from './components/OrderBook';
-import { dummyOrders } from '../../utils/assetConstant';
 import OrderPanel from './components/OrderPanel';
 import { usePriceContext } from '../../context/PriceContext';
 import ChartHeader, { type MarketDetails } from './components/ChartHeader';
 import Orders from './components/Orders';
 import { useEffect, useState } from 'react';
 import { getUserId } from '../../utils/jwt';
-import axiosInstance from '../../lib/axiosInstance';
-import { userToastMessages } from '../../utils/userToastMessages';
+import { getOrderbook, getOrders } from '../../store/apis';
+import { useQuery } from '@tanstack/react-query';
 
 export type OrderDto = {
     price: number;
     quantity: number;
+    remainingQuantity: number;
 };
 
 export interface OrderBook {
@@ -22,6 +22,12 @@ export interface OrderBook {
 };
 
 const Chart = () => {
+    const userId: string | null = getUserId();
+    const { data, error, isFetching } = useQuery({
+        queryKey: ['orders', userId],
+        enabled: !!userId,
+        queryFn: () => getOrders(userId as any)
+    })
     const { symbol } = useParams<{ symbol: string }>();
     const { getPrice, getDetails, subscribeToOrderBook } = usePriceContext();
     const [bids, setBids] = useState<OrderDto[]>([])
@@ -29,42 +35,34 @@ const Chart = () => {
     const price = getPrice(symbol?.toUpperCase() || "");
     const details: MarketDetails | any = getDetails(symbol?.toUpperCase() || "");
     const [isOrderbookLoading, setOrderBookLoading] = useState<Boolean>(false)
+    const [orders, setOrders] = useState<any>([])
+
+    useEffect(() => {
+        setOrders(() => data?.data || [])
+    }, [data])
 
     useEffect(() => {
         if (!symbol) return;
-
         const unsubscribe = subscribeToOrderBook(symbol.toUpperCase(), (data: any) => {
             setBids(() => data.bids)
             setasks(() => data.asks)
         });
-
         return () => {
             unsubscribe();
         };
     }, [symbol, subscribeToOrderBook]);
     useEffect(() => {
         if (!symbol) return;
-        axiosInstance.get('/order/order-book/' + symbol?.toLocaleUpperCase()).then((data: any) => {
-            console.log(data?.data);
-            setOrderBookLoading(true)
-            setBids(() => data?.data?.bids)
-            setasks(() => data?.data?.asks)
-        }).catch(() => {
+        try {
+            getOrderbook(symbol).then((res) => {
+                setBids(() => res?.data?.bids)
+                setasks(() => res?.data?.asks)
+            })
+        } catch (error) {
             setBids(() => [])
             setasks(() => [])
-        }).finally(() => {
-            setOrderBookLoading(false)
-        })
-    }, [symbol])
-    const userId = getUserId();
-    const handlePlceOrder = async (order: any) => {
-        try {
-            const response = await axiosInstance.post("/order/publish", order)
-            userToastMessages('success', response?.data?.message || "Order is Queued Please wait.")
-        } catch (error: any) {
-            userToastMessages('success', error?.data?.message || "Order failed to push to queue....!")
         }
-    }
+    }, [symbol])
     return (
         <div>
             <ChartHeader marketPrice={details || null} />
@@ -78,18 +76,14 @@ const Chart = () => {
                         asks={asks?.length > 0 ? asks : []}
                     />
                     <OrderPanel
-                        orderData={dummyOrders}
+                        setOrders={setOrders}
                         marketPrice={Number(price)}
-                        placeOrder={(order: any) => {
-                            console.log("Placed Order : ", order);
-                            handlePlceOrder(order)
-                        }}
                         userId={userId as string}
                     />
                 </div>
             </div>
             <div className={`mt-5 sm:mt-0 p-4 ${isOrderbookLoading && "bg-slate-600 animate-ping"}`} >
-                <Orders orders={dummyOrders} />
+                <Orders orders={orders || []} />
             </div>
         </div>
     )

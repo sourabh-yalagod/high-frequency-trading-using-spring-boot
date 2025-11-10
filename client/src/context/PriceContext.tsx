@@ -228,7 +228,6 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const subscription = client.subscribe(topic, (message) => {
       try {
         const data = JSON.parse(message.body);
-        console.log(`Order book data for ${asset}:`, data);
         callback(data);
       } catch (error) {
         console.error("Error parsing order book message:", error);

@@ -350,24 +350,3 @@ export const qnaData = [
     answer: "Absolutely! CryptoX is available on iOS and Android devices. Our mobile app offers the same features as the desktop version, allowing you to trade, monitor markets, and manage your portfolio on the go."
   }
 ];
-
-export const dummyOrders = [
-  {
-    id: "1",
-    userId: "u1",
-    asset: "BTCUSDT",
-    orderType: "LIMIT",
-    price: 67000,
-    quantity: 0.02,
-    remainingQuantity: 0.02,
-    margin: "isolated",
-    sl:10,
-    tg:100,
-    status: "PENDING",
-    orderSide: "BUY",
-    createdAt: "2025-11-01T10:12:00Z",
-    updateAt: "2025-11-01T10:12:00Z",
-  }
-];
-
-
