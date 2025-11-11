@@ -53,7 +53,11 @@ const usePlaceOrder = () => {
     });
 };
 const updateUserBalance = async (userId: string) => {
-    await axiosInstance.get("/user/update-balance/" + userId)
+    return await axiosInstance.get("/user/update-balance/" + userId)
 }
 
-export { registerUser, loginUser, getUserDetails, requestVerifyAccount, verifyAccount, updateUsername, depositeMoney, updateUserBalance, usePlaceOrder, getOrderbook, placeOrder, getOrders };
+const updateOrder = async (order: any) => {
+    return await axiosInstance.post("/order/update/" + order?.id, order)
+}
+
+export { registerUser, updateOrder, loginUser, getUserDetails, requestVerifyAccount, verifyAccount, updateUsername, depositeMoney, updateUserBalance, usePlaceOrder, getOrderbook, placeOrder, getOrders };

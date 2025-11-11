@@ -5,6 +5,7 @@ import { FaGithub } from "react-icons/fa";
 import { registerUser } from "../../store/apis";
 import { useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { userToastMessages } from "../../utils/userToastMessages";
 
 const Signup = () => {
   const params = useSearchParams()[0];
@@ -29,10 +30,10 @@ const Signup = () => {
   const handleSubmit = async (values: typeof initialValues, { resetForm }: any) => {
     try {
       const response = await registerUser(values);
-      console.log(response.data);
+      if (response.data)
+        navigate("/signin")
     } catch (error: any) {
-      console.log(error?.message || error);
-
+      userToastMessages("error", error?.response?.data?.message || "SignUp failed...!");
     }
     resetForm();
   };

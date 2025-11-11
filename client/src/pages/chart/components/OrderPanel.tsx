@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { TrendingUp, TrendingDown, DollarSign, Layers, AlertCircle } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Layers, AlertCircle, Loader } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { order } from "../../../utils/assetConstant";
 import { getUserId } from "../../../utils/jwt";
@@ -26,12 +26,6 @@ interface OrderPayload {
   status: string;
   orderSide: string;
   callUrl: string;
-}
-
-interface OrderStatus {
-  status: 'idle' | 'success' | 'error';
-  message: string;
-  order?: any;
 }
 
 const OrderTypeSelector: React.FC<{
@@ -162,39 +156,41 @@ const ActionButtons: React.FC<{
   orderType: string;
   onSubmit: () => void;
   onReset: () => void;
-}> = ({ isSubmitting, quantity, orderSide, orderType, onSubmit, onReset }) => (
-  <div className="flex gap-2 pt-1">
+}> = ({ isSubmitting, quantity, orderSide, orderType, onSubmit, onReset }) => {
+
+  return <div className="flex gap-2 pt-1">
     <button
       onClick={onReset}
-      className="flex-1 py-2 text-xs rounded font-semibold text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-all"
+      disabled={isSubmitting}
+      className="flex-1 py-2 text-xs rounded font-semibold text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
     >
       Reset
     </button>
     <button
       onClick={onSubmit}
       disabled={isSubmitting || !quantity || parseFloat(quantity) <= 0}
-      className={`flex-1 py-2 text-xs rounded font-semibold text-white transition-all ${orderSide === order.side.buy
-        ? "bg-green-600 hover:bg-green-700"
-        : "bg-red-600 hover:bg-red-700"
+      className={`flex-1 py-2 px-2 text-xs rounded font-semibold text-white transition-all flex items-center justify-center gap-1 ${orderSide === order.side.buy
+        ? "bg-green-600 hover:bg-green-700 disabled:bg-green-600"
+        : "bg-red-600 hover:bg-red-700 disabled:bg-red-600"
         } ${isSubmitting || !quantity ? "opacity-60 cursor-not-allowed" : ""}`}
     >
-      {isSubmitting ? "Placing..." : `${orderSide} ${orderType}`}
+      {isSubmitting && <Loader className="w-3 h-3 animate-spin" />}
+      {isSubmitting ? "Processing..." : `${orderSide} ${orderType}`}
     </button>
   </div>
-);
+}
 
 const OrderPanel: React.FC<OrderPanelProps> = ({ setOrders, userId, marketPrice }) => {
   const amount = useSelector((state: any) => state?.amount?.value);
   const { symbol } = useParams();
-
+  const [orderUpdateLoading, setOrderUpdateLoading] = useState(false);
   const [orderType, setOrderType] = useState(order.type.limit);
   const [orderSide, setOrderSide] = useState(order.side.buy);
   const [price, setPrice] = useState<string>(marketPrice.toString());
   const [quantity, setQuantity] = useState<string>("");
   const [leverage, setLeverage] = useState<number>(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderStatus, setOrderStatus] = useState<OrderStatus>({ status: 'idle', message: '' });
   const [webHookResponseLoading, setWebhookResponseLoading] = useState(false);
+
   const totalValue = useMemo(() => {
     const p = orderType === order.type.market ? marketPrice : parseFloat(price) || 0;
     const q = parseFloat(quantity) || 0;
@@ -221,55 +217,49 @@ const OrderPanel: React.FC<OrderPanelProps> = ({ setOrders, userId, marketPrice 
     };
   }, [orderType, price, quantity, requiredMargin, symbol, userId, marketPrice]);
 
-  const { mutate } = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: (orderPayload: OrderPayload) => placeOrder(orderPayload),
     onSuccess: (response, payload) => {
-      console.log("✅ Order placed successfully");
       userToastMessages('success', response?.data?.message || "Order placed! Listening for updates...");
-
-      // ✅ Subscribe to webhook AFTER order is placed
+      setWebhookResponseLoading(true)
       const backendUrl = import.meta.env.VITE_BACKEND_URL;
       const subscribeUrl = `${backendUrl}/order/webhook/subscribe/${payload.userId}/${payload.orderId}`;
-
-      console.log("🔗 Subscribing to webhook:", subscribeUrl);
 
       const eventSource = new EventSource(subscribeUrl);
 
       eventSource.onopen = () => {
+        console.log('HEy');
         setWebhookResponseLoading(true)
       };
 
-      eventSource.addEventListener('order-update', (event: Event) => {
+      eventSource.addEventListener("order-update", (event: Event) => {
         try {
           const messageEvent = event as MessageEvent;
           const data = JSON.parse(messageEvent.data);
-          console.log("📨 Order update event:", data);
-          setOrders((prev: any) => [...prev, data])
+          setOrders((prev: any[]) => {
+            const filteredOrders = prev.filter(
+              (order) => String(order.id) !== String(data.id)
+            );
+            return [...filteredOrders, data];
+          });
         } catch (error) {
-          console.error("Error parsing order-update event:", error);
+          console.error("Order update event Error:", error);
         } finally {
-          setWebhookResponseLoading(false)
+          setWebhookResponseLoading(false);
         }
       });
 
+
       eventSource.onerror = (error) => {
-        console.error("❌ Webhook connection error:", error);
-        setOrderStatus({
-          status: 'error',
-          message: 'Lost connection to order updates',
-        });
+        console.error("Webhook connection error:", error);
         setWebhookResponseLoading(false)
         eventSource.close();
       };
       resetForm();
     },
     onError: (error: any) => {
-      console.error("❌ Order placement failed:", error);
+      console.error("Order placement failed:", error);
       userToastMessages('error', error?.response?.data?.message || "Order failed to place!");
-      setOrderStatus({
-        status: 'error',
-        message: 'Failed to place order',
-      });
     },
   });
 
@@ -279,13 +269,13 @@ const OrderPanel: React.FC<OrderPanelProps> = ({ setOrders, userId, marketPrice 
       return;
     }
 
-    setIsSubmitting(true);
     try {
       const payload = buildOrderPayload();
-      console.log("📦 Sending order payload:", payload);
+      console.log("Sending order payload:", payload);
       mutate(payload);
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+      console.error("Error submitting order:", error);
+      userToastMessages('error', 'Failed to submit order');
     }
   };
 
@@ -293,7 +283,7 @@ const OrderPanel: React.FC<OrderPanelProps> = ({ setOrders, userId, marketPrice 
     setPrice(marketPrice.toString());
     setQuantity("");
     setLeverage(1);
-    setOrderStatus({ status: 'idle', message: '' });
+    ({ status: 'idle', message: '' });
   };
 
   return (
@@ -337,18 +327,14 @@ const OrderPanel: React.FC<OrderPanelProps> = ({ setOrders, userId, marketPrice 
         <OrderSummary totalValue={totalValue} requiredMargin={requiredMargin} leverage={leverage} />
 
         {webHookResponseLoading && (
-          <div
-            className={`p-3 rounded text-xs ${orderStatus.status === 'success'
-              ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-              : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-              }`}
-          >
-            Please Wait for webhook response It may take some seconds...!
+          <div className="text-slate-600 text-xs flex gap-2 items-center">
+            <Loader className="animate-spin" size={16} />
+            <p>Please Wait for webhook response It may take some seconds...!</p>
           </div>
         )}
 
         <ActionButtons
-          isSubmitting={isSubmitting}
+          isSubmitting={isPending}
           quantity={quantity}
           orderSide={orderSide}
           orderType={orderType}

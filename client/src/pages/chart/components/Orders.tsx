@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { userToastMessages } from "../../../utils/userToastMessages";
+import { ChevronDown, X, Trash2, Plus, Loader } from "lucide-react";
 import { usePriceContext } from "../../../context/PriceContext";
+import { updateOrder } from "../../../store/apis";
+import { userToastMessages } from "../../../utils/userToastMessages";
+
 interface Order {
     id: string;
     userId: string;
@@ -22,53 +25,61 @@ interface OrdersProps {
 }
 
 const Orders: React.FC<OrdersProps> = ({ orders }) => {
+    const [updateOrderLoading, setUpdateOrderLoading] = useState(false);
     const { getPrice } = usePriceContext();
-
     const [orderData, setOrderData] = useState<Order[]>([]);
-
-    useEffect(() => {
-        if (Array.isArray(orders)) {
-            setOrderData(() => orders?.map((o) => ({
-                ...o,
-                sl: o?.sl ?? "",
-                tg: o?.tg ?? "",
-            }))
-            );
-        }
-    }, [orders?.length]);
+    const [closeOrderId, setCloseOrderId] = useState("")
     const [activeModal, setActiveModal] = useState<{
         id: string;
         field: "sl" | "tg" | null;
     }>({ id: "", field: null });
     const [inputValue, setInputValue] = useState("");
 
+    useEffect(() => {
+        if (Array.isArray(orders)) {
+            setOrderData(
+                orders?.map((o) => ({
+                    ...o,
+                    sl: o?.sl ?? "",
+                    tg: o?.tg ?? "",
+                }))
+            );
+        }
+    }, [orders?.length]);
+
     const getStatusColor = (status: string) => {
-        switch (status) {
+        switch (status?.toUpperCase()) {
             case "PENDING":
-                return "text-yellow-500";
+                return "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400";
             case "CLOSED":
-                return "text-gray-500";
+                return "bg-gray-50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400";
             case "OPEN":
-                return "text-blue-500";
+                return "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400";
             case "REJECTED":
-                return "text-red-500";
+                return "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400";
             default:
-                return "text-gray-600 dark:text-gray-300";
+                return "bg-gray-50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400";
         }
     };
 
     const getPositionStatus = (order: Order) => {
+        if (order?.status?.toUpperCase() === "PENDING") {
+            return { color: "text-gray-400", pnl: 0, volatility: "-" };
+        }
+
         const current = Number(getPrice(order?.asset?.toUpperCase()));
+        if (!current) return { color: "text-gray-400", pnl: 0, volatility: "-" };
 
-        if (!current) return { color: "text-gray-400", pnl: 0 };
-
-        const isBuy = order?.orderSide === "BUY";
+        const isBuy = order?.orderSide?.toUpperCase() === "BUY";
         const diff = current - order?.price;
         const pnl = isBuy ? diff * order?.quantity : -diff * order?.quantity;
+        const volatilityPercent = ((diff / order?.price) * 100).toFixed(2);
+        const volatility = `${diff > 0 ? "+" : ""}${volatilityPercent}%`;
 
         return {
-            color: pnl > 0 ? "text-green-500" : pnl < 0 ? "text-red-500" : "text-blue-500",
+            color: pnl > 0 ? "text-green-500" : pnl < 0 ? "text-red-500" : "text-gray-400",
             pnl,
+            volatility,
         };
     };
 
@@ -77,170 +88,389 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
         setInputValue("");
     };
 
-    const handleSaveModal = () => {
+    const handleSaveModal = async () => {
+        setUpdateOrderLoading(true)
         const { id, field } = activeModal;
-        if (!field) return;
-        setOrderData((prev) =>
-            prev?.map((o) => (o.id === id ? { ...o, [field]: inputValue } : o))
-        );
+        if (!field || !inputValue) return;
+        let order: any = orderData?.find(order => order.id == id)
+        if (field == "sl") {
+            order.sl = Number(inputValue);
+        }
+        if (field == "tg") {
+            order.tg = Number(inputValue);
+        }
+        const response = await updateOrder(order);
+        if (response.data) {
+            userToastMessages("success", "Order udpated succefully")
+            setOrderData((prev) =>
+                prev?.map((o) => (o.id === id ? { ...o, [field]: Number(inputValue) } : o))
+            );
+        } else {
+            userToastMessages("error", "order update failed....!")
+        }
+        setUpdateOrderLoading(false)
         setActiveModal({ id: "", field: null });
-        console.log(orderData);
     };
 
-    const handleCloseOrder = (id: string) => {
-        setOrderData((prev) =>
-            prev?.map((o) => (o.id === id ? { ...o, status: "CLOSED" } : o))
-        );
+    const handleCloseOrder = async (order: Order) => {
+        setCloseOrderId(order.id);
+        const marketPrice = Number(getPrice(order?.asset?.toUpperCase()));
+        try {
+            let profitLoss = 0;
+
+            if (order.orderSide === "BUY") {
+                profitLoss = (marketPrice - order.price) * order.quantity;
+            } else if (order.orderSide === "SELL") {
+                profitLoss = (order.price - marketPrice) * order.quantity;
+            }
+
+            profitLoss = Number(profitLoss.toFixed(2));
+
+            const updatedOrder = { ...order, status: "CLOSED", profitLoss };
+
+            const response = await updateOrder(updatedOrder);
+
+            if (response?.data) {
+                setOrderData((prev) =>
+                    prev?.map((o) =>
+                        o.id === order.id ? { ...o, status: "CLOSED", profitLoss } : o
+                    )
+                );
+
+                const message =
+                    profitLoss >= 0
+                        ? `Order closed with profit: ${profitLoss}`
+                        : `Order closed with loss: ${Math.abs(profitLoss)}`;
+
+                userToastMessages("success", message);
+            }
+
+            console.log("Close order function:", updatedOrder);
+        } catch (error) {
+            console.error("Error closing order:", error);
+            userToastMessages("error", "Failed to close order");
+        }
+        finally {
+            setCloseOrderId("");
+        }
     };
+
+
+    const handleDeleteSL = async (id: string) => {
+        let order: any = orderData?.find(order => order.id == id)
+        order.sl = null;
+        const response = await updateOrder(order);
+        if (response?.data) {
+            setOrderData((prev) =>
+                prev?.map((o) => (o.id === id ? { ...o, sl: "" } : o))
+            );
+            userToastMessages('success', "updated order.")
+        } else {
+            userToastMessages('error', "update order failed...!");
+        }
+    };
+
+    const handleDeleteTG = async (id: string) => {
+        let order: any = orderData?.find(order => order.id == id)
+        order.tg = null;
+        const response = await updateOrder(order);
+        if (response?.data) {
+            setOrderData((prev) =>
+                prev?.map((o) => (o.id === id ? { ...o, tg: "" } : o))
+            );
+            userToastMessages('success', "updated order.")
+        } else {
+            userToastMessages('error', "update order failed...!");
+        }
+    };
+
+    if (!orderData?.length) {
+        return (
+            <div className="flex items-center justify-center p-8 text-gray-500 dark:text-gray-400">
+                No orders available
+            </div>
+        );
+    }
 
     return (
-        <div className="relative w-full max-h-[300px] overflow-scroll rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-            <table className="min-w-full text-sm md:text-base">
-                <thead className=" text-gray-700 dark:text-gray-300">
-                    <tr>
-                        {[
-                            "Asset",
-                            "Order Price",
-                            "Current Price",
-                            "Quantity",
-                            "SL",
-                            "TG",
-                            "Status",
-                            "Position (P/L)",
-                            "Actions",
-                        ].map((head) => (
-                            <th
-                                key={head}
-                                className="px-4 py-3 text-left font-semibold border-b border-gray-200 dark:border-gray-700"
-                            >
-                                {head}
-                            </th>
-                        ))}
-                    </tr>
-                </thead>
+        <div className="w-full">
+            {/* Mobile View */}
+            <div className="lg:hidden space-y-3 p-4">
+                {orderData?.map((order: any) => {
+                    const { color, pnl, volatility } = getPositionStatus(order);
+                    const current = Number(getPrice(order?.asset?.toUpperCase()));
+                    const statusColor = getStatusColor(order?.status);
 
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {orderData?.map((order: any) => {
-                        const isPendingOrOpenOrder = order?.status?.toUpperCase() == "PENDING" || order?.status?.toUpperCase() == "OPEN"
-
-                        const { color, pnl } = getPositionStatus(order);
-                        const current = Number(getPrice(order?.asset?.toUpperCase()));
-
-                        return (
-                            <tr
-                                key={order?.id}
-                                className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
-                            >
-                                <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
-                                    {order?.asset}
-                                </td>
-                                <td className="px-4 py-3">{order?.price?.toLocaleString()}</td>
-                                <td className="px-4 py-3">
-                                    {typeof current === "number" ? current.toLocaleString() : "-"}
-                                </td>
-                                <td className="px-4 py-3">{order?.quantity}</td>
-
-                                {/* SL */}
-                                <td className="px-4 py-3">
-                                    {order?.sl ? (
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-gray-300">{order?.sl}</span>
-                                            <button
-                                                className="text-red-500 hover:text-red-600 text-xs"
-                                                onClick={() =>
-                                                    setOrderData((prev: any) =>
-                                                        prev.map((o: any) =>
-                                                            o.id === order?.id ? { ...o, sl: "" } : o
-                                                        )
-                                                    )
-                                                }
-                                            >
-                                                ✕
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            onClick={() => {
-                                                if (!isPendingOrOpenOrder) {
-                                                    userToastMessages("warning", "Order should be OPEN of Pending...!")
-                                                    return
-                                                } else {
-                                                    handleOpenModal(order?.id, "sl")
-                                                }
-                                            }}
-                                            className="text-blue-500 text-xs hover:underline"
-                                        >
-                                            + Add
-                                        </button>
-                                    )}
-                                </td>
-
-                                {/* TG */}
-                                <td className="px-4 py-3">
-                                    {order?.tg ? (
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-gray-300">{order?.tg}</span>
-                                            <button
-                                                className="text-red-500 hover:text-red-600 text-xs"
-                                                onClick={() =>
-                                                    setOrderData((prev: any) =>
-                                                        prev.map((o: any) =>
-                                                            o.id === order?.id ? { ...o, tg: "" } : o
-                                                        )
-                                                    )
-                                                }
-                                            >
-                                                ✕
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            onClick={() => {
-                                                if (!isPendingOrOpenOrder) {
-                                                    userToastMessages("warning", "Order should be OPEN of Pending...!")
-                                                    return
-                                                } else {
-                                                    handleOpenModal(order?.id, "tg")
-                                                }
-                                            }}
-                                            className="text-green-500 text-xs hover:underline"
-                                        >
-                                            + Add
-                                        </button>
-                                    )}
-                                </td>
-
-                                <td className={`px-4 py-3 font-medium ${getStatusColor(order?.status)}`}>
+                    return (
+                        <div
+                            key={order?.id}
+                            className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3"
+                        >
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="font-semibold text-gray-900 dark:text-gray-100">
+                                        {order?.asset}
+                                    </p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        {order?.orderSide === "BUY" ? "🟢 Buy" : "🔴 Sell"}
+                                    </p>
+                                </div>
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${statusColor}`}>
                                     {order?.status}
-                                </td>
+                                </span>
+                            </div>
 
-                                <td className={`px-4 py-3 font-semibold ${color}`}>
-                                    {pnl.toFixed(2)}
-                                </td>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                    <p className="text-gray-500 dark:text-gray-400 text-xs">Order Price</p>
+                                    <p className="font-semibold text-gray-900 dark:text-gray-100">
+                                        {order?.price?.toLocaleString()}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500 dark:text-gray-400 text-xs">Current Price</p>
+                                    <p className="font-semibold text-gray-900 dark:text-gray-100">
+                                        {order?.status?.toUpperCase() === "PENDING"
+                                            ? "-"
+                                            : typeof current === "number"
+                                                ? current.toLocaleString()
+                                                : "-"}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500 dark:text-gray-400 text-xs">Quantity</p>
+                                    <p className="font-semibold text-gray-900 dark:text-gray-100">
+                                        {order?.quantity}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500 dark:text-gray-400 text-xs">Volatility</p>
+                                    <p className={`font-semibold ${color}`}>{volatility}</p>
+                                </div>
+                            </div>
 
-                                <td className="px-4 py-3">
-                                    {order?.status === "OPEN" || order?.status === "PENDING" ? (
-                                        <button
-                                            onClick={() => handleCloseOrder(order?.id)}
-                                            className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-md transition"
-                                        >
-                                            Close
-                                        </button>
+                            <div className="flex gap-2 text-xs">
+                                <div className="flex-1">
+                                    <p className="text-gray-500 dark:text-gray-400 mb-1">SL</p>
+                                    {order?.sl ? (
+                                        <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                            <span className="text-gray-700 dark:text-gray-300">{order?.sl}</span>
+                                            <button
+                                                onClick={() => handleDeleteSL(order)}
+                                                className="text-red-500 hover:text-red-600"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
                                     ) : (
-                                        <span className="text-gray-400 text-xs">—</span>
+                                        <button
+                                            onClick={() => handleOpenModal(order?.id, "sl")}
+                                            className="w-full text-blue-500 hover:text-blue-600 py-2 bg-gray-50 dark:bg-gray-800 rounded text-xs font-medium"
+                                        >
+                                            + Add
+                                        </button>
                                     )}
-                                </td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-gray-500 dark:text-gray-400 mb-1">TG</p>
+                                    {order?.tg ? (
+                                        <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                            <span className="text-gray-700 dark:text-gray-300">{order?.tg}</span>
+                                            <button
+                                                onClick={() => handleDeleteTG(order?.id)}
+                                                className="text-red-500 hover:text-red-600"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleOpenModal(order?.id, "tg")}
+                                            className="w-full text-green-500 hover:text-green-600 py-2 bg-gray-50 dark:bg-gray-800 rounded text-xs font-medium"
+                                        >
+                                            + Add
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                <div className="flex-1">
+                                    <p className="text-gray-500 dark:text-gray-400 text-xs">P/L</p>
+                                    <p className={`font-semibold ${color}`}>{pnl.toFixed(2)}</p>
+                                </div>
+                                {order?.status?.toUpperCase() === "OPEN" ||
+                                    order?.status?.toUpperCase() === "PENDING" ? (
+                                    <button
+                                        onClick={() => handleCloseOrder(order)}
+                                        className="flex items-center justify-center px-3 py-2 bg-red-500 hover:bg-red-600 text-white text-xs rounded-md font-medium transition"
+                                    >
+                                        {closeOrderId == order.id ? <Loader className="animate-spin" /> : "Close"}
+                                    </button>
+                                ) : (
+                                    <div className="flex-1" />
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Desktop View */}
+            <div className="hidden lg:block overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                <table className="w-full text-sm">
+                    <thead>
+                        <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                            {[
+                                "Asset",
+                                "Order Type",
+                                "Side",
+                                "Order Price",
+                                "Current Price",
+                                "Volatility",
+                                "Quantity",
+                                "SL",
+                                "TG",
+                                "Status",
+                                "P/L",
+                                "Actions",
+                            ].map((head) => (
+                                <th
+                                    key={head}
+                                    className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300"
+                                >
+                                    {head}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                        {orderData?.map((order: any) => {
+                            const { color, pnl, volatility } = getPositionStatus(order);
+                            const current = Number(getPrice(order?.asset?.toUpperCase()));
+                            const statusColor = getStatusColor(order?.status);
+                            const isPending = order?.status?.toUpperCase() === "PENDING";
+                            const isOpenOrPending =
+                                order?.status?.toUpperCase() === "OPEN" ||
+                                order?.status?.toUpperCase() === "PENDING";
+
+                            return (
+                                <tr
+                                    key={order?.id}
+                                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                                >
+                                    <td className="px-4 py-3 font-semibold text-gray-900 dark:text-gray-100">
+                                        {order?.asset}
+                                    </td>
+                                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                                        {order?.orderType || "Market"}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span
+                                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${order?.orderSide?.toUpperCase() === "BUY"
+                                                ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                                                : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                                                }`}
+                                        >
+                                            {order?.orderSide === "BUY" ? "🟢 BUY" : "🔴 SELL"}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                                        {order?.price?.toLocaleString()}
+                                    </td>
+                                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                                        {isPending ? "-" : typeof current === "number" ? current.toLocaleString() : "-"}
+                                    </td>
+                                    <td className={`px-4 py-3 font-semibold ${color}`}>{volatility}</td>
+                                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                                        {order?.quantity}
+                                    </td>
+
+                                    {/* SL */}
+                                    <td className="px-4 py-3">
+                                        {order?.sl ? (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-gray-700 dark:text-gray-300">
+                                                    {order?.sl}
+                                                </span>
+                                                <button
+                                                    onClick={() => handleDeleteSL(order?.id)}
+                                                    className="text-red-500 hover:text-red-600 transition"
+                                                >
+                                                    <X size={16} />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleOpenModal(order?.id, "sl")}
+                                                className="text-blue-500 hover:text-blue-600 text-xs font-medium transition flex items-center gap-1"
+                                            >
+                                                <Plus size={14} /> Add
+                                            </button>
+                                        )}
+                                    </td>
+
+                                    {/* TG */}
+                                    <td className="px-4 py-3">
+                                        {order?.tg ? (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-gray-700 dark:text-gray-300">
+                                                    {order?.tg}
+                                                </span>
+                                                <button
+                                                    onClick={() => handleDeleteTG(order?.id)}
+                                                    className="text-red-500 hover:text-red-600 transition"
+                                                >
+                                                    <X size={16} />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleOpenModal(order?.id, "tg")}
+                                                className="text-green-500 hover:text-green-600 text-xs font-medium transition flex items-center gap-1"
+                                            >
+                                                <Plus size={14} /> Add
+                                            </button>
+                                        )}
+                                    </td>
+
+                                    <td className="px-4 py-3">
+                                        <span
+                                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusColor}`}
+                                        >
+                                            {order?.status}
+                                        </span>
+                                    </td>
+
+                                    <td className={`px-4 py-3 font-semibold ${color}`}>
+                                        {pnl.toFixed(2)}
+                                    </td>
+
+                                    <td className="px-4 py-3">
+                                        {isOpenOrPending ? (
+                                            <button
+                                                onClick={() => handleCloseOrder(order)}
+                                                className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs rounded-md font-medium transition"
+                                            >
+                                                {closeOrderId == order.id ? <Loader className="animate-spin" /> : "Close"}
+                                            </button>
+                                        ) : (
+                                            <span className="text-gray-400 text-xs">—</span>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
 
             {/* Modal */}
             {activeModal.field && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-10">
-                    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 w-72 border border-gray-200 dark:border-gray-700">
-                        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">
+                <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50 p-4">
+                    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6 w-full max-w-sm border border-gray-200 dark:border-gray-700">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                             Set {activeModal.field.toUpperCase()}
                         </h3>
                         <input
@@ -248,20 +478,21 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             placeholder={`Enter ${activeModal.field.toUpperCase()} value`}
-                            className="w-full border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 bg-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                            autoFocus
                         />
-                        <div className="flex justify-end gap-3 mt-4">
+                        <div className="flex justify-end gap-3 mt-6">
                             <button
                                 onClick={() => setActiveModal({ id: "", field: null })}
-                                className="px-3 py-1 rounded-md text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                                className="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium transition"
                             >
                                 Cancel
                             </button>
                             <button
-                                onClick={handleSaveModal}
-                                className="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+                                onClick={() => handleSaveModal()}
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
                             >
-                                Save
+                                {updateOrderLoading ? <Loader className="animate-spin" /> : "Save"}
                             </button>
                         </div>
                     </div>
