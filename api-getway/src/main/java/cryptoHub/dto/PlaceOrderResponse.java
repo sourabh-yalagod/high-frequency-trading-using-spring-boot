@@ -5,13 +5,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
-@AllArgsConstructor
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public class ChachUserDto {
+public class PlaceOrderResponse {
+    private boolean isPlaced;
+    private String message;
     private String userId;
-    private Double amount;
-    private Boolean isLocked = false;
-    private String email;
 }

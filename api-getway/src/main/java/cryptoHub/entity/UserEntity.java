@@ -33,7 +33,7 @@ public class UserEntity implements UserDetails {
     @Column(name = "refresh_token", columnDefinition = "TEXT")
     private String refreshToken;
 
-    private Double amount;
+    private Double amount = 0.0;
 
     @JsonProperty(access = JsonProperty.Access.READ_WRITE)
     private String password;

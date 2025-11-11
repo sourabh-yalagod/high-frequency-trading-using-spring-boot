@@ -1,10 +1,13 @@
 package cryptoHub.controller;
 
+import cryptoHub.dto.CacheUserDto;
 import cryptoHub.dto.LoginRequestDto;
 import cryptoHub.dto.LoginResponseDto;
 import cryptoHub.entity.UserEntity;
+import cryptoHub.lib.AppConstants;
 import cryptoHub.repository.UserRepository;
 import cryptoHub.service.AuthUserService;
+import cryptoHub.service.RedisService;
 import cryptoHub.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.Response;
@@ -26,7 +29,7 @@ public class AuthController {
     private final AuthUserService authUserService;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
-
+    private final RedisService redisService;
     @PostMapping("/register")
     public ResponseEntity<UserEntity> registerUser(@RequestBody UserEntity userPayload) throws Exception {
         String identifier = userPayload.getEmail();
@@ -42,7 +45,6 @@ public class AuthController {
     @PostMapping("/login")
     @Transactional
     public ResponseEntity<LoginResponseDto> loginUser(@RequestBody LoginRequestDto loginRequestDto) throws Exception {
-        System.out.println("LoginRequestDto : " + loginRequestDto);
         UserEntity user = authUserService.loadUserByUsername(loginRequestDto.getEmail());
         if (user == null) {
             throw new Exception("User not found with " + loginRequestDto.getEmail());
@@ -57,18 +59,18 @@ public class AuthController {
                 loginRequestDto.getEmail(), loginRequestDto.getPassword()
         );
         Authentication authResult = authenticationManager.authenticate(authentication);
-        System.out.println("authentication : " + authResult.isAuthenticated());
         SecurityContextHolder.getContext().setAuthentication(authResult);
 
-        String accessToken = jwtUtil.generateJwtToken(loginRequestDto.getEmail(), 10, authentication);
-        String refreshToken = jwtUtil.generateJwtToken(loginRequestDto.getEmail(), 60 * 24 * 7, authentication);
+        String accessToken = jwtUtil.generateJwtToken(loginRequestDto.getEmail(), user.getId(), AppConstants.ACCESS_TOKEN_EXPIRY_IN_MINUTES);
+        String refreshToken = jwtUtil.generateJwtToken(loginRequestDto.getEmail(), user.getId(), AppConstants.REFRESH_TOKEN_EXPIRY_IN_MINUTES);
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
-
+        CacheUserDto cacheUserDto = CacheUserDto.builder().userId(user.getId()).email(user.getEmail()).amount(user.getAmount()).build();
+        redisService.cacheUser(cacheUserDto);
         LoginResponseDto loginResponse = LoginResponseDto.builder()
+                .id(user.getId())
                 .accessToken(accessToken)
                 .refreshToken(user.getRefreshToken())
-                .id(user.getId())
                 .build();
         return ResponseEntity.ok(loginResponse);
     }

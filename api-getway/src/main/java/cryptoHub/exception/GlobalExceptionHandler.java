@@ -1,5 +1,7 @@
 package cryptoHub.exception;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -12,7 +14,11 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleAllExceptions(Exception ex) {
+    public ResponseEntity<Object> handleAllExceptions(Exception ex, HttpServletResponse response) {
+        if (response.isCommitted()) {
+            System.err.println("Response already committed. Cannot handle exception: " + ex.getMessage());
+            return null;
+        }
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.BAD_REQUEST.value());

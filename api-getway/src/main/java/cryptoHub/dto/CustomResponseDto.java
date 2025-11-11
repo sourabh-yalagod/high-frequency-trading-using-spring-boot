@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class VerifyAccountRequestDto {
-    private String otp;
+public class CustomResponseDto {
+    private boolean status;
+    private String message;
 }

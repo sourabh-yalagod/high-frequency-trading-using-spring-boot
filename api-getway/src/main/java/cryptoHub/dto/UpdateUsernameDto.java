@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class VerifyAccountRequestDto {
-    private String otp;
+public class UpdateUsernameDto {
+    private String username;
 }

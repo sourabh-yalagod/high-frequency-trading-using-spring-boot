@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Webhook Test Client</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-connect {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-connect:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-disconnect {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-disconnect:hover:not(:disabled) {
+            background: #ee5a52;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .status.disconnected {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+
+        .status.disconnected::before {
+            background: #c33;
+        }
+
+        .status.connected {
+            background: #efe;
+            color: #3c3;
+            border: 1px solid #cfc;
+        }
+
+        .status.connected::before {
+            background: #3c3;
+            animation: pulse 2s infinite;
+        }
+
+        .status.connecting {
+            background: #ffeaa7;
+            color: #d63031;
+            border: 1px solid #fdcb6e;
+        }
+
+        .status.connecting::before {
+            background: #fdcb6e;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .events-container {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .events-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .events-header h3 {
+            color: #333;
+            font-size: 18px;
+        }
+
+        .clear-btn {
+            padding: 6px 12px;
+            background: #e0e0e0;
+            color: #555;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .clear-btn:hover {
+            background: #d0d0d0;
+        }
+
+        .event-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #667eea;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .event-time {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .event-data {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #333;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔔 Order Webhook Client</h1>
+    <p class="subtitle">Real-time order notifications using Server-Sent Events</p>
+
+    <div class="input-group">
+        <label for="serverUrl">Server URL</label>
+        <input
+                type="text"
+                id="serverUrl"
+                value="http://localhost:8080/order/webhook/subscribe"
+                placeholder="http://localhost:8080/order/webhook/subscribe"
+        >
+    </div>
+
+    <div class="input-group">
+        <label for="userId">User ID</label>
+        <input
+                type="text"
+                id="userId"
+                value="user123"
+                placeholder="Enter user ID"
+        >
+    </div>
+
+    <div class="button-group">
+        <button class="btn-connect" id="connectBtn" onclick="connect()">
+            Connect
+        </button>
+        <button class="btn-disconnect" id="disconnectBtn" onclick="disconnect()" disabled>
+            Disconnect
+        </button>
+    </div>
+
+    <div class="status disconnected" id="status">
+        Disconnected
+    </div>
+
+    <div class="events-container">
+        <div class="events-header">
+            <h3>Events</h3>
+            <button class="clear-btn" onclick="clearEvents()">Clear</button>
+        </div>
+        <div id="events">
+            <div class="empty-state">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                </svg>
+                <p>No events yet. Connect to start receiving orders.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let eventSource = null;
+    let eventCount = 0;
+
+    function updateStatus(status, message) {
+        const statusEl = document.getElementById('status');
+        statusEl.className = `status ${status}`;
+        statusEl.textContent = message;
+    }
+
+    function addEvent(data) {
+        const eventsEl = document.getElementById('events');
+
+        // Remove empty state if it exists
+        const emptyState = eventsEl.querySelector('.empty-state');
+        if (emptyState) {
+            emptyState.remove();
+        }
+
+        eventCount++;
+
+        const eventItem = document.createElement('div');
+        eventItem.className = 'event-item';
+
+        const time = new Date().toLocaleTimeString();
+
+        eventItem.innerHTML = `
+            <div class="event-time">📦 Event #${eventCount} - ${time}</div>
+            <div class="event-data">${JSON.stringify(data, null, 2)}</div>
+        `;
+
+        eventsEl.insertBefore(eventItem, eventsEl.firstChild);
+    }
+
+    function connect() {
+        const serverUrl = document.getElementById('serverUrl').value;
+        const userId = document.getElementById('userId').value;
+
+        if (!userId.trim()) {
+            alert('Please enter a User ID');
+            return;
+        }
+
+        const fullUrl = `${serverUrl}/${userId}`;
+
+        updateStatus('connecting', 'Connecting...');
+
+        eventSource = new EventSource(fullUrl);
+
+        eventSource.onopen = function() {
+            updateStatus('connected', `Connected to ${userId}`);
+            document.getElementById('connectBtn').disabled = true;
+            document.getElementById('disconnectBtn').disabled = false;
+            document.getElementById('userId').disabled = true;
+            document.getElementById('serverUrl').disabled = true;
+        };
+
+        eventSource.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                addEvent(data);
+            } catch (e) {
+                addEvent({ raw: event.data });
+            }
+        };
+
+        eventSource.addEventListener('order-update', function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                addEvent(data);
+            } catch (e) {
+                addEvent({ raw: event.data });
+            }
+        });
+
+        eventSource.onerror = function(error) {
+            console.error('SSE Error:', error);
+            updateStatus('disconnected', 'Connection error - Disconnected');
+            disconnect();
+        };
+    }
+
+    function disconnect() {
+        if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+        }
+
+        updateStatus('disconnected', 'Disconnected');
+        document.getElementById('connectBtn').disabled = false;
+        document.getElementById('disconnectBtn').disabled = true;
+        document.getElementById('userId').disabled = false;
+        document.getElementById('serverUrl').disabled = false;
+    }
+
+    function clearEvents() {
+        const eventsEl = document.getElementById('events');
+        eventsEl.innerHTML = `
+            <div class="empty-state">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                </svg>
+                <p>No events yet. Connect to start receiving orders.</p>
+            </div>
+        `;
+        eventCount = 0;
+    }
+
+    // Clean up on page unload
+    window.addEventListener('beforeunload', function() {
+        if (eventSource) {
+            eventSource.close();
+        }
+    });
+</script>
+</body>
+</html>

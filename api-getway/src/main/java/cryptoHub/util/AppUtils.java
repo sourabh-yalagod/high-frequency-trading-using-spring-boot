@@ -1,5 +1,9 @@
 package cryptoHub.util;
 
+import cryptoHub.dto.OrderDto;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -9,8 +13,11 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.web.client.RestTemplate;
 
 import java.security.SecureRandom;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class AppUtils {
     public static String getAttribute(String registrationId) {

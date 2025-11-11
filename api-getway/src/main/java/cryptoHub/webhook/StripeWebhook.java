@@ -5,17 +5,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.model.Event;
-import com.stripe.model.Review;
-import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
-import cryptoHub.dto.ChachUserDto;
+import cryptoHub.dto.CacheUserDto;
 import cryptoHub.entity.PaymentEntity;
 import cryptoHub.entity.UserEntity;
 import cryptoHub.repository.PaymentRepository;
 import cryptoHub.repository.UserRepository;
 import cryptoHub.service.AuthUserService;
 import cryptoHub.service.RedisService;
-import cryptoHub.service.UserService;
 import cryptoHub.types.PaymentStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,9 +52,19 @@ public class StripeWebhook {
                     JsonNode objectNode = root.path("object");
                     String sessionId = objectNode.path("id").asText();
                     JsonNode customerDetails = objectNode.path("customer_details");
-                    Double amount = objectNode.get("amount_total").asDouble() == 0.0 ? objectNode.get("amount_total").asDouble() : objectNode.get("amount_subtotal").asDouble();
+                    Double amount = objectNode.get("amount_total").asDouble() == 0.0 ? objectNode.get("amount_total").asDouble() / 100 : objectNode.get("amount_subtotal").asDouble() / 100;
                     String email = customerDetails.path("email").asText();
                     UserEntity user = authUserService.loadUserByUsername(email);
+                    CacheUserDto cachedUser = redisService.getUser(user.getId());
+                    if (cachedUser == null) {
+                        CacheUserDto newCache = CacheUserDto.builder()
+                                .userId(user.getId())
+                                .amount(amount)
+                                .email(email)
+                                .isLocked(false)
+                                .build();
+                        redisService.cacheUser(newCache);
+                    }
                     PaymentEntity paymentEntityObj = PaymentEntity.builder()
                             .sessionId(sessionId)
                             .user(user)
@@ -65,21 +72,10 @@ public class StripeWebhook {
                             .amount(amount)
                             .build();
                     PaymentEntity paymentEntity = paymentRepository.save(paymentEntityObj);
-                    user.setAmount((user.getAmount() == null ? 0.0 : user.getAmount()) + amount);
+                    cachedUser.setAmount(cachedUser.getAmount() == null ? paymentEntity.getAmount() : paymentEntity.getAmount() + cachedUser.getAmount());
+                    user.setAmount(cachedUser.getAmount());
+                    redisService.cacheUser(cachedUser);
                     userRepository.save(user);
-                    ChachUserDto chachUser = redisService.getUser(user.getId());
-                    if (chachUser == null) {
-                        ChachUserDto newCache = ChachUserDto.builder()
-                                .userId(user.getId())
-                                .amount(amount)
-                                .email(email)
-                                .isLocked(false)
-                                .build();
-                        redisService.cacheUser(newCache);
-                    } else {
-                        chachUser.setAmount(chachUser.getAmount() + paymentEntity.getAmount());
-                        redisService.cacheUser(chachUser);
-                    }
                 }
                 break;
         }

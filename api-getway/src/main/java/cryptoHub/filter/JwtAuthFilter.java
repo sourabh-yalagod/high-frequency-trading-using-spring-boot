@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -17,6 +18,7 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
+    AntPathMatcher pathMatcher = new AntPathMatcher();
     private final JwtUtil jwtUtil;
     private final ErrorHandlerForFilters errorHandlerForFilters;
 
@@ -24,7 +26,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String apiPath = request.getServletPath();
         boolean isPublicRoute = AppConstants.PUBLIC_ROUTES.stream()
-                .anyMatch(apiPath::startsWith);
+                .anyMatch(pattern -> pathMatcher.match(pattern, apiPath));
         if (isPublicRoute) {
             filterChain.doFilter(request, response);
             return;
