@@ -1,19 +1,24 @@
 package org.example;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Import;
-
-import org.example.controller.PingController;
 
 
 @SpringBootApplication
-// We use direct @Import instead of @ComponentScan to speed up cold starts
-// @ComponentScan(basePackages = "org.example.controller")
-@Import({ PingController.class })
-public class Application {
+
+public class Application implements CommandLineRunner {
+    @Value("${server.port}")
+    private String port;
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        System.out.println("Application  Running on PORT : " + port);
+        new StreamLambdaHandler();
     }
 }

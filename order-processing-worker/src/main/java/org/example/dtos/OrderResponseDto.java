@@ -1,8 +1,7 @@
-package org.example.entity;
+package org.example.dtos;
 
 import lombok.Data;
 import org.example.types.OrderStatus;
-import org.example.types.OrderType;
 
 @Data
 public class OrderResponseDto {

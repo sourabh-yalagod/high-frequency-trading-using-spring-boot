@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CachedUser {
+public class CacheUserDto {
     private String userId;
     private Double amount;
     private Boolean isLocked = false;
