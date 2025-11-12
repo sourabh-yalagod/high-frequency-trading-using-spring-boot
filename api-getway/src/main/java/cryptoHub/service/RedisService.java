@@ -1,5 +1,6 @@
 package cryptoHub.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import cryptoHub.dto.CacheUserDto;
 import cryptoHub.lib.AppConstants;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class RedisService {
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public void cacheUser(CacheUserDto user) {
         redisTemplate.opsForValue().set(
@@ -23,10 +25,8 @@ public class RedisService {
 
     public CacheUserDto getUser(String key) {
         Object cachedUser = redisTemplate.opsForValue().get(key);
-        if (cachedUser instanceof CacheUserDto) {
-            return (CacheUserDto) cachedUser;
-        }
-        return null;
+        if (cachedUser == null) return null;
+        return objectMapper.convertValue(cachedUser, CacheUserDto.class);
     }
 
     public void removeUser(String userId) {

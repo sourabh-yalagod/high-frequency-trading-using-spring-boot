@@ -5,8 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import websocket.types.Assets;
-import websocket.types.OrderSide;
 
 @Data
 @AllArgsConstructor
@@ -16,5 +14,6 @@ import websocket.types.OrderSide;
 public class OrderDto {
     private double price;
     private double quantity;
+    private Double remainingQuantity;
     private String asset;
 }

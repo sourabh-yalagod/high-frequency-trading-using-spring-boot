@@ -27,7 +27,7 @@ public class AppConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:8080", "https://cryptohub-api-getway.onrender.com", "http://localhost:5173"));
+        configuration.setAllowedOrigins(List.of("http://localhost:8080","https://main.d2y2jk4cvn2s0d.amplifyapp.com", "https://sourabh-cryptox.onrender.com", "http://localhost:5173"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
         configuration.setAllowCredentials(true);

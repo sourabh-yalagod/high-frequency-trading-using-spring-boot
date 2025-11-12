@@ -29,7 +29,7 @@
       <change beforePath="$PROJECT_DIR$/../db-service/src/main/resources/application.properties" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../db-service/src/test/java/org/example/StreamLambdaHandlerTest.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../db-service/template.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../order-processor/.gradle/nb-cache/subprojects.ser" beforeDir="false" afterPath="$PROJECT_DIR$/../order-processor/.gradle/nb-cache/subprojects.ser" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../order-processor/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../order-processor/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../order-service-test/Dockerfile" beforeDir="false" />

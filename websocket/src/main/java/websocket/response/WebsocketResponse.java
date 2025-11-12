@@ -28,21 +28,25 @@ public class WebsocketResponse {
             return Collections.emptyList();
         }
 
-        Map<Double, Double> aggregated = orders.stream()
-                .collect(Collectors.groupingBy(
+        // Group by price and sum both quantity and remainingQuantity
+        Map<Double, OrderDto> aggregated = orders.stream()
+                .collect(Collectors.toMap(
                         OrderDto::getPrice,
-                        Collectors.summingDouble(OrderDto::getQuantity)
+                        o -> new OrderDto(o.getPrice(), o.getQuantity(), o.getRemainingQuantity(), o.getAsset()),
+                        (o1, o2) -> new OrderDto(
+                                o1.getPrice(),
+                                o1.getQuantity() + o2.getQuantity(),                  // sum quantities
+                                o1.getRemainingQuantity() + o2.getRemainingQuantity(), // sum remaining quantities
+                                o1.getAsset()
+                        )
                 ));
 
-        List<OrderDto> result = aggregated.entrySet().stream()
-                .map(entry -> new OrderDto(entry.getKey(), entry.getValue(), orders.getFirst().getAsset()))
+        List<OrderDto> result = aggregated.values()
+                .stream()
+                .sorted(isBuyers
+                        ? Comparator.comparingDouble(OrderDto::getPrice).reversed()
+                        : Comparator.comparingDouble(OrderDto::getPrice))
                 .collect(Collectors.toList());
-
-        if (isBuyers) {
-            result.sort(Comparator.comparingDouble(OrderDto::getPrice).reversed());
-        } else {
-            result.sort(Comparator.comparingDouble(OrderDto::getPrice));
-        }
 
         return result;
     }
