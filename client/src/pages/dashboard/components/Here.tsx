@@ -7,7 +7,7 @@ const Hero = ({ balance, showBalance, setShowBalance }: any) => {
     const navigate = useNavigate()
     const handleDirectToDepositePage = () => {
         if (!!userId) {
-            navigate("/deposite/" + userId)
+            navigate("/deposit/" + userId)
         } else {
             navigate("/signin")
         }

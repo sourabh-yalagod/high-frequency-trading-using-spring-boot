@@ -21,7 +21,7 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route element={<PrivateRoute />}>
           <Route path='/chart/:symbol' element={<Chart />} />
-          <Route path='/deposite/:userId' element={<Deposite />} />
+          <Route path='/deposit/:userId' element={<Deposite />} />
           <Route path='/profile/:userId' element={<UserProfile />} />
           <Route path='/settings/:userId' element={<Settings />} />
         </Route>

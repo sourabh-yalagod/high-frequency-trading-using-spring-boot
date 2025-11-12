@@ -5,29 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5ef4bd80-77e7-4132-a4ca-b952f5096481" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../api-getway/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/config/AppConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/config/AppConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/config/OAuthConfig/OAuth2SuccessHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/config/OAuthConfig/OAuth2SuccessHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/config/RedisConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/config/RedisConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/controller/AuthController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/controller/DepositController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/controller/DepositController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/controller/UserController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/dto/ChachUserDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/dto/VerifyAccountRequestDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/dto/VerifyAccountRequestDto.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/entity/UserEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/entity/UserEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/exception/ErrorResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/exception/ErrorResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/exception/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/exception/GlobalExceptionHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/filter/JwtAuthFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/filter/JwtAuthFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/lib/AppConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/lib/AppConstants.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/service/RedisService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/service/RedisService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/util/AppUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/util/AppUtils.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/util/JwtUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/util/JwtUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/webhook/StripeWebhook.java" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/src/main/java/cryptoHub/webhook/StripeWebhook.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../api-getway/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../api-getway/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/.env" beforeDir="false" afterPath="$PROJECT_DIR$/../client/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/src/pages/auth/Signup.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../client/src/pages/auth/Signup.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/src/pages/chart/components/OrderPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../client/src/pages/chart/components/OrderPanel.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/src/pages/chart/components/Orders.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../client/src/pages/chart/components/Orders.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../db-service/.gitignore" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../db-service/.idea/.gitignore" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../db-service/.idea/encodings.xml" beforeDir="false" />
@@ -51,18 +29,7 @@
       <change beforePath="$PROJECT_DIR$/../db-service/src/main/resources/application.properties" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../db-service/src/test/java/org/example/StreamLambdaHandlerTest.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../db-service/template.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Application.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Application.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/OrderUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/OrderUtils.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/StreamLambdaHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/StreamLambdaHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/config/SqsConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/config/SqsConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/controller/OrderController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/controller/OrderController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/dtos/CacheUserDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/dtos/CacheUserDto.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/dtos/OrderResponseDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/dtos/OrderResponseDto.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/service/OrderService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/service/OrderService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/org/example/StreamLambdaHandlerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/example/StreamLambdaHandlerTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../order-processor/.gradle/nb-cache/subprojects.ser" beforeDir="false" afterPath="$PROJECT_DIR$/../order-processor/.gradle/nb-cache/subprojects.ser" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../order-processor/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../order-processor/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../order-service-test/Dockerfile" beforeDir="false" />

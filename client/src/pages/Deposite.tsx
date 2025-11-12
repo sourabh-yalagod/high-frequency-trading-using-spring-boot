@@ -37,7 +37,7 @@ const Deposite = () => {
         try {
             const payload = {
                 userId: userId,
-                amount: parseFloat(amount)*100,
+                amount: parseFloat(amount),
                 name: "Crypto Hub"
             };
 
@@ -56,7 +56,7 @@ const Deposite = () => {
     const closeModal = () => {
         setShowModal(false);
         setAmount('');
-        window.history.replaceState({}, '', `/deposite/${userId}`);
+        window.history.replaceState({}, '', `/deposit/${userId}`);
     };
 
     return (
