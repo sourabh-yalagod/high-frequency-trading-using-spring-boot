@@ -76,7 +76,7 @@ public class StripeWebhook {
                             .build();
                     PaymentEntity paymentEntity = paymentRepository.save(paymentEntityObj);
                     cachedUser.setAmount(
-                            cachedUser.getAmount() == 0.0 || cachedUser.getAmount() == null
+                            cachedUser.getAmount() == null
                                     ? paymentEntity.getAmount() :
                                     paymentEntity.getAmount() + cachedUser.getAmount());
                     System.out.println("cachedUser : " + cachedUser);

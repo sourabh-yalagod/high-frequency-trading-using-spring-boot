@@ -3,8 +3,10 @@ package cryptoHub.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cryptoHub.dto.*;
+import cryptoHub.entity.PaymentEntity;
 import cryptoHub.entity.TwoFactorAuthEntity;
 import cryptoHub.entity.UserEntity;
+import cryptoHub.repository.PaymentRepository;
 import cryptoHub.repository.TwoFactorAuthRepository;
 import cryptoHub.repository.UserRepository;
 import cryptoHub.service.UserService;
@@ -13,6 +15,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -20,7 +23,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
-    private final TwoFactorAuthRepository twoFactorAuthRepository;
+    private final PaymentRepository paymentRepository;
     private final UserRepository userRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
@@ -99,5 +102,11 @@ public class UserController {
         user.get().setUsername(usernameDto.getUsername());
         userRepository.save(user.get());
         return ResponseEntity.ok(CustomResponseDto.builder().status(true).message("username updated successfully.").build());
+    }
+
+    @GetMapping("/payment-details/{userId}")
+    public ResponseEntity<List<PaymentEntity>> getPaymentDetails(@PathVariable String userId){
+        List<PaymentEntity> payments = paymentRepository.findByUserId(userId);
+        return ResponseEntity.ok(payments);
     }
 }
