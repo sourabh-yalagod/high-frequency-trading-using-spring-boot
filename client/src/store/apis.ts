@@ -37,10 +37,18 @@ const placeOrder = async (order: any) => {
 const getOrders = async (userId: string) => {
     return await axiosInstance.get("/order/" + userId)
 }
+const getClosedOrders = async (userId: string) => {
+    return await axiosInstance.get("/order/closed/" + userId)
+}
+
+const getPaymentHistory = async (userId: string) => {
+    return await axiosInstance.get("/user/payment-details/" + userId)
+}
 
 const updateUsername = (userId: string) => {
     axiosInstance.post("/user/update-user/" + userId)
 }
+
 const usePlaceOrder = () => {
     return useMutation({
         mutationFn: (order: any) => placeOrder(order),
@@ -52,6 +60,7 @@ const usePlaceOrder = () => {
         },
     });
 };
+
 const updateUserBalance = async (userId: string) => {
     return await axiosInstance.get("/user/update-balance/" + userId)
 }
@@ -60,4 +69,4 @@ const updateOrder = async (order: any) => {
     return await axiosInstance.post("/order/update/" + order?.id, order)
 }
 
-export { registerUser, updateOrder, loginUser, getUserDetails, requestVerifyAccount, verifyAccount, updateUsername, depositeMoney, updateUserBalance, usePlaceOrder, getOrderbook, placeOrder, getOrders };
+export { registerUser, getPaymentHistory, getClosedOrders, updateOrder, loginUser, getUserDetails, requestVerifyAccount, verifyAccount, updateUsername, depositeMoney, updateUserBalance, usePlaceOrder, getOrderbook, placeOrder, getOrders };

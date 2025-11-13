@@ -9,6 +9,8 @@ import UserProfile from './pages/UserProfile'
 import About from './pages/About'
 import Settings from './pages/Settings'
 import Deposite from './pages/Deposite'
+import Statistics from './pages/Statistics'
+import PaymentHistory from './pages/PaymentHistory'
 
 function App() {
   return (
@@ -21,6 +23,8 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route element={<PrivateRoute />}>
           <Route path='/chart/:symbol' element={<Chart />} />
+          <Route path='/payment-history/:userId' element={<PaymentHistory />} />
+          <Route path='/statistics/:userId' element={<Statistics />} />
           <Route path='/deposit/:userId' element={<Deposite />} />
           <Route path='/profile/:userId' element={<UserProfile />} />
           <Route path='/settings/:userId' element={<Settings />} />

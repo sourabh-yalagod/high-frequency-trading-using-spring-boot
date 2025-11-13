@@ -1,13 +1,29 @@
+import { useDispatch } from "react-redux";
 import { usePriceContext } from "../../context/PriceContext";
 import Footer from "../../utils/Footer";
 import AssetCard from "./components/AssetCard";
 import Header from "./components/Header";
-import Hero from "./components/Here";
+import Hero from "./components/Hero";
 import Qna from "./components/Qna";
+import { useQuery } from "@tanstack/react-query";
+import { getUserDetails } from "../../store/apis";
+import { getUserId } from "../../utils/jwt";
+import { useEffect } from "react";
+import { setUser } from "../../store/redux/userSlice";
 
 const Dashboard = () => {
   const { assets, connected } = usePriceContext();
-
+  const dispatch = useDispatch()
+  const { data, isLoading, isSuccess } = useQuery({
+    queryKey: ['user'],
+    queryFn: () => getUserDetails(getUserId() as string),
+    enabled: !!getUserId(),
+    staleTime: Infinity,
+  })
+  useEffect(() => {
+    if (!isLoading && isSuccess)
+      dispatch(setUser(data?.data));
+  }, [data, isLoading])
   return (
     <div className="min-h-screen xl:px-20 flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
       <Header connected={connected} />

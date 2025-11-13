@@ -1,10 +1,17 @@
 import { Download, Eye, EyeOff } from "lucide-react";
 import { getUserId } from "../../../utils/jwt";
 import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 
-const Hero = ({ balance, showBalance, setShowBalance }: any) => {
+const Hero = () => {
+    const [showBalance, setShowBalance] = useState(true)
     const userId = getUserId();
-    const navigate = useNavigate()
+    const user = useSelector((state: any) => state?.user)
+    const navigate = useNavigate();
+    const balance = useMemo(() => {
+        return user?.amount
+    }, [user])
     const handleDirectToDepositePage = () => {
         if (!!userId) {
             navigate("/deposit/" + userId)
@@ -13,13 +20,13 @@ const Hero = ({ balance, showBalance, setShowBalance }: any) => {
         }
     }
     return (
-        <div className="w-full max-w-3/4 space-y-6">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white">
-                Discuss Everything Crypto on{' '}
-                <span className="text-yellow-400 underline decoration-4 underline-offset-8">
+        <div className="w-full sm:max-w-3/4 space-y-6">
+            <div className="text-4xl space-y-2 sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white">
+                <h1>Discuss Everything Crypto on{' '}</h1>
+                <div className="text-yellow-400 underline decoration-4 underline-offset-8">
                     BINANCE SQUARE
-                </span>
-            </h1>
+                </div>
+            </div>
 
             <div className="space-y-3 bg-gray-50 dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
                 <div className="flex items-center space-x-3 text-gray-700 dark:text-gray-300">
@@ -30,7 +37,7 @@ const Hero = ({ balance, showBalance, setShowBalance }: any) => {
                 </div>
 
                 <div className="text-4xl font-bold text-gray-900 dark:text-white">
-                    {showBalance ? `$${Number(balance).toFixed(2)}` : '******'}
+                    {showBalance ? `$${Number(balance || 0).toFixed(2)}` : '******'}
                 </div>
 
                 <div className="flex flex-wrap gap-3 pt-2">
@@ -40,11 +47,20 @@ const Hero = ({ balance, showBalance, setShowBalance }: any) => {
                         <Download size={18} />
                         <span>Deposit</span>
                     </button>
-                    <button className="px-6 py-3 bg-gray-800 dark:bg-gray-700 hover:bg-gray-900 dark:hover:bg-gray-600 text-white font-semibold rounded-lg transition">
+                    <button
+                        onClick={() => navigate('/chart/BTCUSDT')}
+                        className="px-6 py-3 bg-gray-800 dark:bg-gray-700 hover:bg-gray-900 dark:hover:bg-gray-600 text-white font-semibold rounded-lg transition">
                         Trade
                     </button>
-                    <button className="px-6 py-3 bg-gray-800 dark:bg-gray-700 hover:bg-gray-900 dark:hover:bg-gray-600 text-white font-semibold rounded-lg transition">
-                        Convert
+                    <button
+                        onClick={() => navigate('/statistics/' + getUserId())}
+                        className="px-6 py-3 bg-green-800 dark:bg-green-700 hover:bg-green-900 dark:hover:bg-green-600 text-white font-semibold rounded-lg transition">
+                        Statistics
+                    </button>
+                    <button
+                        onClick={() => navigate('/payment-history/' + getUserId())}
+                        className="px-6 py-3 bg-blue-800 dark:bg-blue-700 hover:bg-blue-900 dark:hover:bg-blue-600 text-white font-semibold rounded-lg transition">
+                        Payment History
                     </button>
                 </div>
             </div>

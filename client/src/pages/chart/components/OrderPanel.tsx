@@ -3,11 +3,11 @@ import { TrendingUp, TrendingDown, DollarSign, Layers, AlertCircle, Loader } fro
 import { useParams } from "react-router-dom";
 import { order } from "../../../utils/assetConstant";
 import { getUserId } from "../../../utils/jwt";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { userToastMessages } from "../../../utils/userToastMessages";
-import { placeOrder } from "../../../store/apis";
-import { useSelector } from "react-redux";
+import { getUserDetails, placeOrder } from "../../../store/apis";
 import { FcMoneyTransfer } from "react-icons/fc";
+import useUpdateTanstackCache from "../../../hooks/useUpdateTanstackCache";
 
 interface OrderPanelProps {
   userId: string;
@@ -181,15 +181,19 @@ const ActionButtons: React.FC<{
 }
 
 const OrderPanel: React.FC<OrderPanelProps> = ({ setOrders, userId, marketPrice }) => {
-  const amount = useSelector((state: any) => state?.amount?.value);
+  const { invalidateCache } = useUpdateTanstackCache()
+  const queryClient = useQueryClient();
+  const user: any = queryClient.getQueryData(['user']);
+  const [wallet, setWallet] = useState(0)
   const { symbol } = useParams();
-  const [orderUpdateLoading, setOrderUpdateLoading] = useState(false);
   const [orderType, setOrderType] = useState(order.type.limit);
   const [orderSide, setOrderSide] = useState(order.side.buy);
   const [price, setPrice] = useState<string>(marketPrice.toString());
   const [quantity, setQuantity] = useState<string>("");
   const [leverage, setLeverage] = useState<number>(1);
   const [webHookResponseLoading, setWebhookResponseLoading] = useState(false);
+  const [placedOrder, setPlacedOrder] = useState<OrderPayload | null>(null)
+
 
   const totalValue = useMemo(() => {
     const p = orderType === order.type.market ? marketPrice : parseFloat(price) || 0;
@@ -217,6 +221,11 @@ const OrderPanel: React.FC<OrderPanelProps> = ({ setOrders, userId, marketPrice 
     };
   }, [orderType, price, quantity, requiredMargin, symbol, userId, marketPrice]);
 
+  useEffect(() => {
+    getUserDetails(getUserId() as string).then((res) => {
+      setWallet(prev => res?.data?.amount || prev)
+    }).catch()
+  }, [])
   const { mutate, isPending } = useMutation({
     mutationFn: (orderPayload: OrderPayload) => placeOrder(orderPayload),
     onSuccess: (response, payload) => {
@@ -224,11 +233,9 @@ const OrderPanel: React.FC<OrderPanelProps> = ({ setOrders, userId, marketPrice 
       setWebhookResponseLoading(true)
       const backendUrl = import.meta.env.VITE_BACKEND_URL;
       const subscribeUrl = `${backendUrl}/order/webhook/subscribe/${payload.userId}/${payload.orderId}`;
-
       const eventSource = new EventSource(subscribeUrl);
-
+      setWallet(prev => prev - Number(placedOrder?.margin))
       eventSource.onopen = () => {
-        console.log('HEy');
         setWebhookResponseLoading(true)
       };
 
@@ -240,7 +247,9 @@ const OrderPanel: React.FC<OrderPanelProps> = ({ setOrders, userId, marketPrice 
             const filteredOrders = prev.filter(
               (order) => String(order.id) !== String(data.id)
             );
+            invalidateCache('user')
             return [...filteredOrders, data];
+
           });
         } catch (error) {
           console.error("Order update event Error:", error);
@@ -248,7 +257,6 @@ const OrderPanel: React.FC<OrderPanelProps> = ({ setOrders, userId, marketPrice 
           setWebhookResponseLoading(false);
         }
       });
-
 
       eventSource.onerror = (error) => {
         console.error("Webhook connection error:", error);
@@ -268,10 +276,13 @@ const OrderPanel: React.FC<OrderPanelProps> = ({ setOrders, userId, marketPrice 
       userToastMessages('error', 'Please enter a valid quantity');
       return;
     }
-
+    if (!userId || !getUserId()) {
+      userToastMessages('error', 'Please authenticate yourself...!');
+      return;
+    }
     try {
       const payload = buildOrderPayload();
-      console.log("Sending order payload:", payload);
+      setPlacedOrder(payload)
       mutate(payload);
     } catch (error) {
       console.error("Error submitting order:", error);
@@ -319,7 +330,7 @@ const OrderPanel: React.FC<OrderPanelProps> = ({ setOrders, userId, marketPrice 
 
         <label className="flex gap-1 items-center text-xs font-medium dark:text-gray-500 py-2 text-gray-300 mb-1">
           <FcMoneyTransfer className="w-3 h-3 mr-1" />
-          Current Wallet Balance: {amount?.toFixed(2)}
+          Current Wallet Balance: {wallet?.toFixed(2)}
         </label>
 
         <LeverageSlider leverage={leverage} onChange={setLeverage} />

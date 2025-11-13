@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { User, Mail, Shield, Key, CreditCard, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { getUserId } from '../utils/jwt';
 import { getUserDetails } from '../store/apis';
 import { useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { userToastMessages } from '../utils/userToastMessages';
 
 interface TwoFactorAuthEntity {
     id: string;
@@ -29,35 +31,39 @@ const UserProfile = () => {
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'overview' | 'security' | 'account'>('overview');
 
-    useEffect(() => {
-        const fetchUserData = async () => {
-            if (!getUserId()) {
-                setError('User not authenticated');
-                setLoading(false);
-                return;
-            }
+    const user = useSelector((state: any) => state.user);
 
+    useEffect(() => {
+        const fetchUser = async () => {
             try {
                 setLoading(true);
-                const response = await getUserDetails(userId || "");
-                setUserData(response.data);
-                console.log(response.data);
-                
+                const id = getUserId();
+                if (!id) {
+                    userToastMessages("error", "Please Authenticate");
+                    setError("Not authenticated");
+                    setLoading(false);
+                    return;
+                }
+
+                // Priority: Redux user -> API call fallback
+                if (user && user.id) {
+                    setUserData(user);
+                } else {
+                    const response = await getUserDetails(id);
+                    setUserData(response.data);
+                }
+
                 setError(null);
-            } catch (err) {
-                setError('Failed to load user data');
-                console.error('Error fetching user data:', err);
+            } catch (err: any) {
+                console.error("Error fetching user details:", err);
+                setError("Failed to load user profile");
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchUserData();
-    }, [userId]);
-
-    const formatDate = (id: string) => {
-        return "Member since 2024";
-    };
+        fetchUser();
+    }, [userId, user]);
 
     const StatusBadge = ({ verified }: { verified: boolean }) => (
         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${verified
@@ -134,7 +140,7 @@ const UserProfile = () => {
                     </div>
                     <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Error Loading Profile</h2>
                     <p className="text-red-400 mb-6">{error}</p>
-                    <button 
+                    <button
                         onClick={() => window.location.reload()}
                         className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-all"
                     >
@@ -167,7 +173,7 @@ const UserProfile = () => {
                             <div className="flex-1 min-w-0 w-full">
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                                     <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white truncate">
-                                        {userData.username}
+                                        {userData?.username}
                                     </h1>
                                     <div className="flex flex-wrap gap-2">
                                         <RoleBadge role={userData.role} />
@@ -178,7 +184,6 @@ const UserProfile = () => {
                                     <Mail className="w-4 h-4 flex-shrink-0" />
                                     <span className="truncate">{userData.email}</span>
                                 </p>
-                                <p className="text-gray-500 text-xs sm:text-sm">{formatDate(userData.id)}</p>
                             </div>
 
                             {/* Balance */}

@@ -34,7 +34,6 @@ const Chart = () => {
     const [asks, setasks] = useState<OrderDto[]>([])
     const price = getPrice(symbol?.toUpperCase() || "");
     const details: MarketDetails | any = getDetails(symbol?.toUpperCase() || "");
-    const [isOrderbookLoading, setOrderBookLoading] = useState<Boolean>(false)
     const [orders, setOrders] = useState<any>([])
 
     useEffect(() => {
@@ -82,7 +81,7 @@ const Chart = () => {
                     />
                 </div>
             </div>
-            <div className={`mt-5 sm:mt-0 p-4 ${isOrderbookLoading && "bg-slate-600 animate-ping"}`} >
+            <div className={`mt-5 sm:mt-0 p-4 ${isFetching && "bg-slate-900 animate-pulse"}`} >
                 <Orders orders={orders || []} />
             </div>
         </div>
