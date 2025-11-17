@@ -8,6 +8,7 @@ import org.example.entity.OrderEntity;
 import org.example.repository.OrderRepository;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,20 +25,27 @@ public class StreamLambdaHandler implements RequestHandler<SQSEvent, String> {
 
     @Override
     public String handleRequest(SQSEvent event, Context context) {
+        List<OrderEntity> orders = new ArrayList<>();
         try {
-            List<OrderEntity> orders = new ArrayList<>();
             for (SQSEvent.SQSMessage orderRecord : event.getRecords()) {
                 try {
                     String body = orderRecord.getBody();
                     OrderEntity order = objectMapper.readValue(body, OrderEntity.class);
-                    orderRepository.save(order);
-                    context.getLogger().log("Order : " + order.toString());
+                    orders.add(order);
                 } catch (Exception e) {
                     context.getLogger().log("Order Record Creation error: " + e.getMessage() + "\n");
                 }
             }
         } catch (RuntimeException e) {
             throw new RuntimeException(e);
+        }
+        if (!orders.isEmpty()) {
+            try {
+                orderRepository.saveAll(orders);
+                context.getLogger().log("Saved batch of size: " + orders.size());
+            } catch (Exception e) {
+                context.getLogger().log("Batch save failed: " + e.getMessage());
+            }
         }
         return "Order Processed successfully....!";
     }
