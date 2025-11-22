@@ -16,8 +16,6 @@ const ForgotPassword = () => {
     values: typeof initialValues,
     { resetForm }: any
   ) => {
-    console.log("Forgot Password request submitted:", values);
-    // Example: await axios.post('/api/auth/forgot-password', values);
     resetForm();
   };
 

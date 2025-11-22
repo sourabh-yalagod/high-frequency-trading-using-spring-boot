@@ -155,7 +155,6 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         heartbeatOutgoing: 4000,
 
         onConnect: () => {
-          console.log("Connected to Order Book WebSocket");
           setOrderBookConnected(true);
         },
 
@@ -165,18 +164,15 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         },
 
         onWebSocketClose: () => {
-          console.log("Order Book WebSocket connection closed");
           setOrderBookConnected(false);
         },
 
         onDisconnect: () => {
-          console.log("Disconnected from Order Book WebSocket");
           setOrderBookConnected(false);
         },
 
         debug: (str) => {
           // Uncomment for debugging
-          // console.log('STOMP Debug:', str);
         }
       });
 
@@ -220,7 +216,6 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // If already subscribed, unsubscribe first
     if (subscriptionsRef.current[asset]) {
-      console.log(`Unsubscribing from existing subscription: ${asset}`);
       subscriptionsRef.current[asset].unsubscribe();
     }
 
@@ -234,12 +229,10 @@ export const PriceProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     });
 
-    console.log(`Subscribed to ${topic}:`, subscription.id);
     subscriptionsRef.current[asset] = subscription;
 
     // Return unsubscribe function
     return () => {
-      console.log(`Unsubscribing from ${asset}`);
       subscription?.unsubscribe();
       delete subscriptionsRef.current[asset];
     };

@@ -20,23 +20,18 @@ export const useWebhookSubscription = (userId: string) => {
 
       // Close any existing connection
       if (eventSourceRef.current) {
-        console.log('Closing previous connection');
         eventSourceRef.current.close();
       }
 
       const backendUrl = import.meta.env.VITE_BACKEND_URL;
       const eventUrl = `${backendUrl}/order/webhook/subscribe/${userId}/${orderId}`;
 
-      console.log('🔗 Connecting to webhook:', eventUrl);
-
       eventSourceRef.current = new EventSource(eventUrl);
 
       // Handle incoming messages
       eventSourceRef.current.onmessage = (event) => {
         try {
-          console.log('📨 Raw event data:', event.data);
           const data = JSON.parse(event.data);
-          console.log('✅ Webhook received:', data);
           onMessage(data);
         } catch (error) {
           console.error('Error parsing webhook data:', error);
@@ -48,7 +43,6 @@ export const useWebhookSubscription = (userId: string) => {
       eventSourceRef.current.addEventListener('order-update', (event: Event) => {
         try {
           const messageEvent = event as MessageEvent;
-          console.log('📨 Named event received:', messageEvent.data);
           const data = JSON.parse(messageEvent.data);
           onMessage(data);
         } catch (error) {
@@ -66,7 +60,6 @@ export const useWebhookSubscription = (userId: string) => {
 
       return () => {
         if (eventSourceRef.current) {
-          console.log('Closing webhook connection');
           eventSourceRef.current.close();
         }
       };
@@ -78,7 +71,6 @@ export const useWebhookSubscription = (userId: string) => {
   useEffect(() => {
     return () => {
       if (eventSourceRef.current) {
-        console.log('🔌 Cleaning up webhook connection on unmount');
         eventSourceRef.current.close();
       }
     };

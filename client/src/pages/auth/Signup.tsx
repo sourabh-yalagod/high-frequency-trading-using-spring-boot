@@ -39,7 +39,6 @@ const Signup = () => {
   };
 
   const handleSSOLogin = (provider: string) => {
-    console.log(`Signing up with ${provider}`);
     const backendURL = import.meta.env.VITE_BACKEND_URL;
     window.location.href = `${backendURL}/oauth2/authorization/${provider}`;
   };

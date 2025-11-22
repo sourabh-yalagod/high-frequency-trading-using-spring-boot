@@ -117,8 +117,10 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
         const marketPrice = Number(getPrice(order?.asset?.toUpperCase()));
         try {
             let profitLoss = 0;
-
-            if (order.orderSide === "BUY") {
+            if (order.status == "PENDING") {
+                profitLoss = Number(order?.margin || 0);
+            }
+            else if (order.orderSide === "BUY") {
                 profitLoss = (marketPrice - order.price) * order.quantity;
             } else if (order.orderSide === "SELL") {
                 profitLoss = (order.price - marketPrice) * order.quantity;
@@ -127,7 +129,8 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
             profitLoss = Number(profitLoss.toFixed(2));
 
             const updatedOrder = { ...order, status: "CLOSED", profitLoss };
-
+            console.log(updatedOrder);
+            
             const response = await updateOrder(updatedOrder);
 
             if (response?.data) {
@@ -145,7 +148,6 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
                 userToastMessages("success", message);
             }
 
-            console.log("Close order function:", updatedOrder);
         } catch (error) {
             console.error("Error closing order:", error);
             userToastMessages("error", "Failed to close order");

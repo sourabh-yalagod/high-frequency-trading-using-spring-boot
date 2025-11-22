@@ -19,7 +19,6 @@ const Statistics = () => {
             // Replace with your actual API endpoint
             const res = await getClosedOrders(getUserId() as string);
             setOrders(res.data);
-            console.log(res.data);
             
         } catch (err: any) {
             setError(err?.message);
