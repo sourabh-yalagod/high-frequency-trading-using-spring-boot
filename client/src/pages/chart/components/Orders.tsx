@@ -118,7 +118,7 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
         try {
             let profitLoss = 0;
             if (order.status == "PENDING") {
-                profitLoss = Number(order?.margin || 0);
+                profitLoss = 0;
             }
             else if (order.orderSide === "BUY") {
                 profitLoss = (marketPrice - order.price) * order.quantity;
@@ -129,7 +129,6 @@ const Orders: React.FC<OrdersProps> = ({ orders }) => {
             profitLoss = Number(profitLoss.toFixed(2));
 
             const updatedOrder = { ...order, status: "CLOSED", profitLoss };
-            console.log(updatedOrder);
             
             const response = await updateOrder(updatedOrder);
 

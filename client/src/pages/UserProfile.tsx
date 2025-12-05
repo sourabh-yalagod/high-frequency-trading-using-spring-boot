@@ -324,7 +324,7 @@ const UserProfile = () => {
                                                     Last updated: Recently
                                                 </p>
                                                 <p className="text-gray-500 text-xs font-mono break-all">
-                                                    {userData.password.substring(0, 40)}...
+                                                    {userData?.password && userData?.password?.substring(0, 10)}...
                                                 </p>
                                             </div>
                                         </div>

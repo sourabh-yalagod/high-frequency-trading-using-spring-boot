@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { CreditCard, CheckCircle, XCircle, Loader2, DollarSign, ArrowRight, Info } from 'lucide-react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { CreditCard, CheckCircle, XCircle, Loader2, DollarSign, ArrowRight, Info, ArrowBigLeft } from 'lucide-react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { depositeMoney } from '../store/apis';
+import { FaBackward } from 'react-icons/fa';
 
 const Deposite = () => {
     const { userId } = useParams();
@@ -12,7 +13,7 @@ const Deposite = () => {
     const [modalType, setModalType] = useState('');
     const [sessionId, setSessionId] = useState('');
     const [depositedAmount, setDepositedAmount] = useState('');
-
+    const navigate = useNavigate()
     const quickAmounts = [100, 500, 1000, 5000];
 
     useEffect(() => {
@@ -64,6 +65,7 @@ const Deposite = () => {
             <div className="max-w-md mx-auto">
                 {/* Header */}
                 <div className="text-center mb-6">
+                    <ArrowBigLeft onClick={() => navigate("/")} className='bg-white p-1 rounded-full hover:bg-blue-200 cursor-pointer w-10 h-10 hover:size-11 transition-all' color='black' />
                     <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-xl mb-3">
                         <CreditCard className="w-7 h-7 text-white" />
                     </div>
@@ -198,6 +200,7 @@ const Modal = ({ modalType, depositedAmount, sessionId, closeModal }: any) => {
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 rounded-xl max-w-sm w-full p-6 shadow-2xl transition-colors duration-300">
+                <FaBackward />
                 <div className="text-center">
                     <div
                         className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isSuccess
