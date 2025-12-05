@@ -17,7 +17,6 @@ public class DepositController {
 
     @PostMapping("/create-session")
     public ResponseEntity<String> createSessionForDeposit(@RequestBody DepositRequestDto payload) throws StripeException {
-        System.out.println(payload);
         long unitAmount = Math.round(payload.getAmount() * 100);
 
         SessionCreateParams params = SessionCreateParams.builder()

@@ -57,8 +57,6 @@ public class StripeWebhook {
                     String email = customerDetails.path("email").asText();
                     UserEntity user = authUserService.loadUserByUsername(email);
                     CacheUserDto cachedUser = redisService.getUser(user.getId());
-                    System.out.println("User Entity : " + user);
-                    System.out.println("User cachedUser : " + cachedUser);
                     if (cachedUser == null) {
                         CacheUserDto newCache = CacheUserDto.builder()
                                 .userId(user.getId())
