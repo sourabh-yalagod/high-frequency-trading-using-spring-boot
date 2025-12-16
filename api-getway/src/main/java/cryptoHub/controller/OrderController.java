@@ -12,10 +12,14 @@ import cryptoHub.repository.UserRepository;
 import cryptoHub.service.OrderBookService;
 import cryptoHub.service.RedisService;
 import cryptoHub.service.SqsService;
+import cryptoHub.specifications.OrderSpecification;
 import cryptoHub.types.OrderSide;
 import cryptoHub.types.OrderStatus;
 import cryptoHub.util.OrderUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.http.ResponseEntity;
@@ -100,8 +104,9 @@ public class OrderController {
     public ResponseEntity<Object> updateOrder(@RequestBody OrderEntity orderEntity) {
         OrderEntity order = orderRepository.save(orderEntity);
         Optional<UserEntity> user = userRepository.findById(order.getUserId());
-        if (user.isPresent() && order.getStatus().equals(OrderStatus.CLOSED) && !order.getProfitLoss().isNaN()) {
+        if (user.isPresent() && order.getStatus().equals(OrderStatus.CLOSED) && !order.getProfitLoss().isNaN() && order.getProfitLoss() == 0) {
             boolean isDeleted = removeOrderFromCacheAndDb(order, user.get());
+            System.out.println("isDeleted : " + isDeleted);
             if (!isDeleted) {
                 return ResponseEntity.status(401).body(
                         PlaceOrderResponse
@@ -112,6 +117,13 @@ public class OrderController {
                                 .build()
                 );
             }
+        } else {
+            CacheUserDto cacheUserDto = redisService.getUser(user.get().getId());
+            Double updatedAmount = cacheUserDto.getAmount() + order.getProfitLoss();
+            cacheUserDto.setAmount(updatedAmount);
+            redisService.cacheUser(cacheUserDto);
+            user.get().setAmount(updatedAmount);
+            userRepository.save(user.get());
         }
         return ResponseEntity.status(201).body(order);
     }
@@ -138,6 +150,7 @@ public class OrderController {
             // 1. Get all orders (value + score)
             Set<ZSetOperations.TypedTuple<String>> tuples =
                     zSetOps.reverseRangeWithScores(key, 0, -1);
+            System.out.println("tuples : " + tuples);
             if (tuples == null || tuples.isEmpty()) {
                 return false;
             }
@@ -157,14 +170,13 @@ public class OrderController {
                                 }
                             })
                             .collect(Collectors.toSet());
-
             redisTemplate.delete(key);
             updatedTuples.forEach(tuple -> {
                 zSetOps.add(key, tuple.getValue(), tuple.getScore());
             });
-
             // 4. Update user amount in DB + cache
-            double updatedAmount = user.getAmount() + order.getProfitLoss();
+            double updatedAmount = order.getProfitLoss() != 0.0 ? user.getAmount() + order.getProfitLoss() : user.getAmount() + Double.parseDouble(order.getMargin());
+            System.out.println("updatedAmount : " + updatedAmount);
             user.setAmount(updatedAmount);
 
             CacheUserDto cachedUser = redisService.getUser(user.getId());
@@ -181,4 +193,19 @@ public class OrderController {
         }
     }
 
+    @GetMapping("/orders-pagination")
+    public ResponseEntity<List<OrderEntity>> getOrderByPagination(@RequestParam(required = false, defaultValue = "5") int limit,
+                                                                  @RequestParam(required = false, defaultValue = "0") int page,
+                                                                  @RequestParam(required = false, defaultValue = "createdAt") String filter,
+                                                                  @RequestParam(required = false, defaultValue = "ASC") String sort,
+                                                                  @RequestParam(required = false, defaultValue = "") String search
+    ) {
+        Sort sortObj = sort.startsWith("ASC") ? Sort.by(filter).ascending() : Sort.by(filter).descending();
+        PageRequest pageRequest = PageRequest.of(page, limit, sortObj);
+        Specification<OrderEntity> spec = OrderSpecification.getOrderSpecification(search);
+        System.out.println(spec.toString());
+        List<OrderEntity> orders = orderRepository.findAll(spec, pageRequest).getContent();
+        System.out.println(orders.toString());
+        return ResponseEntity.ok(orders);
+    }
 }

@@ -10,7 +10,6 @@ import cryptoHub.service.AuthUserService;
 import cryptoHub.service.RedisService;
 import cryptoHub.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,7 +17,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -30,6 +32,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final RedisService redisService;
+
     @PostMapping("/register")
     public ResponseEntity<UserEntity> registerUser(@RequestBody UserEntity userPayload) throws Exception {
         String identifier = userPayload.getEmail();
@@ -65,7 +68,9 @@ public class AuthController {
         String refreshToken = jwtUtil.generateJwtToken(loginRequestDto.getEmail(), user.getId(), AppConstants.REFRESH_TOKEN_EXPIRY_IN_MINUTES);
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
-        CacheUserDto cacheUserDto = CacheUserDto.builder().userId(user.getId()).email(user.getEmail()).amount(user.getAmount()).build();
+        double userAmount = user.getAmount() == null ? 0 : user.getAmount();
+        CacheUserDto cacheUserDto = CacheUserDto.builder().
+                userId(user.getId()).email(user.getEmail()).amount(userAmount).build();
         redisService.cacheUser(cacheUserDto);
         LoginResponseDto loginResponse = LoginResponseDto.builder()
                 .id(user.getId())
