@@ -8,8 +8,8 @@ interface OrderBookProps {
 }
 
 const OrderBook: React.FC<OrderBookProps> = ({ bids, asks }) => {
-    const sortedAsks = [...asks]; // sellers: top → bottom
-    const sortedBids = [...bids].reverse(); // buyers: bottom → top
+    const sortedAsks = [...asks] // sellers: top → bottom
+    const sortedBids = [...bids] // buyers: bottom → top
 
     return (
         <div className="w-full md:h-full max-h-[510px] bg-[#0f172a] text-gray-200 rounded-xl shadow-md p-3 sm:p-4 flex flex-col justify-between">
