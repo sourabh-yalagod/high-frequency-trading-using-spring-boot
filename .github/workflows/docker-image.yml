@@ -29,4 +29,6 @@ jobs:
         with:
           context: ./api-getway
           push: true
-          tags: sourabhyalagod/api-getway:latest
+          tags: |
+            sourabhyalagod/crypto-server:latest
+            sourabhyalagod/crypto-server:${{ github.sha }}
